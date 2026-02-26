@@ -10,6 +10,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
+<meta name="author" content="Jiachen Chen, Yiwen Zhao, Yuxi Ren, Jintong Li" />
 
 
 <title>Monte Carlo Study of the MSE Decomposition in k-NN Regression</title>
@@ -362,6 +363,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Monte Carlo Study of the MSE Decomposition
 in k-NN Regression</h1>
+<h4 class="author">Jiachen Chen, Yiwen Zhao, Yuxi Ren, Jintong Li</h4>
 
 
 
@@ -441,6 +443,17 @@ project default is typically B=500).</p>
 ## 4 0.010253180 0.05025318
 ## 5 0.005710641 0.04571064
 ## 6 0.004808072 0.04480807</code></pre>
+</div>
+<div id="assumption-check" class="section level2">
+<h2>Assumption Check</h2>
+<p>In our simulation, the predictor variable <span class="math inline">\(X\)</span> is generated independently, and the
+noise term <span class="math inline">\(\epsilon\)</span> is also
+generated independently with mean zero and constant variance. This
+ensures that the observations satisfy the independence and constant
+variance assumptions required for bias–variance decomposition.</p>
+<p>The true regression function is smooth, which makes k-NN regression
+appropriate for estimating the conditional mean function. Therefore, the
+assumptions underlying our simulation and analysis are satisfied.</p>
 <div id="visualizing-the-decomposition" class="section level3">
 <h3>Visualizing the decomposition</h3>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">plot_mse_1d</span>(res_1d, <span class="at">show =</span> <span class="fu">c</span>(<span class="st">&quot;bias2&quot;</span>, <span class="st">&quot;variance&quot;</span>, <span class="st">&quot;mse_y&quot;</span>))</span></code></pre></div>
@@ -501,73 +514,104 @@ To run the tests locally:</p>
 </div>
 <div id="references-bibtex" class="section level2">
 <h2>References (BibTeX)</h2>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="va">@book</span>{<span class="ot">robert2004monte</span>,</span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>  <span class="dt">title</span>={Monte Carlo statistical methods},</span>
-<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>  <span class="dt">author</span>={Robert, Christian P and Casella, George and Casella, George},</span>
-<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>  <span class="dt">volume</span>={2},</span>
-<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>  <span class="dt">year</span>={2004},</span>
-<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>  <span class="dt">publisher</span>={Springer}</span>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="va">@misc</span>{<span class="ot">wickham_r_2023</span>,</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>    <span class="dt">title</span> = {R packages},</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a>    <span class="dt">url</span> = {https://r-pkgs.org/},</span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>    <span class="dt">urldate</span> = {2026-02-25},</span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a>    <span class="dt">author</span> = {Wickham, Hadley and Bryan, Jennifer},</span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a>    <span class="dt">year</span> = {2023},</span>
 <span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a>}</span>
 <span id="cb13-8"><a href="#cb13-8" tabindex="-1"></a></span>
-<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="va">@article</span>{<span class="ot">cover1967nearest</span>,</span>
-<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>  <span class="dt">title</span>={Nearest neighbour pattern recognition},</span>
-<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>  <span class="dt">author</span>={Cover, TM and Hart, PE},</span>
-<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>  <span class="dt">journal</span>={IEEE Trans. on information theory},</span>
-<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>  <span class="dt">volume</span>={13},</span>
-<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>  <span class="dt">number</span>={1},</span>
-<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>  <span class="dt">pages</span>={21--27},</span>
-<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a>  <span class="dt">year</span>={1967}</span>
-<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>}</span>
-<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a></span>
-<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a><span class="va">@article</span>{<span class="ot">james2013introduction</span>,</span>
-<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a>  <span class="dt">title</span>={An introduction to statistical learning with applications in R},</span>
-<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a>  <span class="dt">author</span>={James, Gareth and Witten, Daniela and Hastie, Trevor and Tibshirani, Robert},</span>
-<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a>  <span class="dt">year</span>={2013},</span>
-<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a>  <span class="dt">publisher</span>={Springer}</span>
-<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a>}</span>
-<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a></span>
-<span id="cb13-26"><a href="#cb13-26" tabindex="-1"></a><span class="va">@book</span>{<span class="ot">hastie2009elements</span>,</span>
-<span id="cb13-27"><a href="#cb13-27" tabindex="-1"></a>  <span class="dt">title</span>={The elements of statistical learning: data mining, inference, and prediction},</span>
-<span id="cb13-28"><a href="#cb13-28" tabindex="-1"></a>  <span class="dt">author</span>={Hastie, Trevor and Tibshirani, Robert and Friedman, Jerome H and Friedman, Jerome H},</span>
-<span id="cb13-29"><a href="#cb13-29" tabindex="-1"></a>  <span class="dt">volume</span>={2},</span>
-<span id="cb13-30"><a href="#cb13-30" tabindex="-1"></a>  <span class="dt">year</span>={2009},</span>
-<span id="cb13-31"><a href="#cb13-31" tabindex="-1"></a>  <span class="dt">publisher</span>={Springer}</span>
-<span id="cb13-32"><a href="#cb13-32" tabindex="-1"></a>}</span>
-<span id="cb13-33"><a href="#cb13-33" tabindex="-1"></a></span>
-<span id="cb13-34"><a href="#cb13-34" tabindex="-1"></a><span class="va">@book</span>{<span class="ot">wickham2023r</span>,</span>
-<span id="cb13-35"><a href="#cb13-35" tabindex="-1"></a>  <span class="dt">title</span>={R packages},</span>
-<span id="cb13-36"><a href="#cb13-36" tabindex="-1"></a>  <span class="dt">author</span>={Wickham, Hadley and Bryan, Jennifer},</span>
-<span id="cb13-37"><a href="#cb13-37" tabindex="-1"></a>  <span class="dt">year</span>={2023},</span>
-<span id="cb13-38"><a href="#cb13-38" tabindex="-1"></a>  <span class="dt">publisher</span>={&quot; O&#39;Reilly Media, Inc.&quot;}</span>
-<span id="cb13-39"><a href="#cb13-39" tabindex="-1"></a>}</span></code></pre></div>
+<span id="cb13-9"><a href="#cb13-9" tabindex="-1"></a><span class="va">@article</span>{<span class="ot">cover_nearest_1967</span>,</span>
+<span id="cb13-10"><a href="#cb13-10" tabindex="-1"></a>    <span class="dt">title</span> = {Nearest neighbor pattern classification},</span>
+<span id="cb13-11"><a href="#cb13-11" tabindex="-1"></a>    <span class="dt">volume</span> = {13},</span>
+<span id="cb13-12"><a href="#cb13-12" tabindex="-1"></a>    <span class="dt">copyright</span> = {https://ieeexplore.ieee.org/Xplorehelp/downloads/license-information/IEEE.html},</span>
+<span id="cb13-13"><a href="#cb13-13" tabindex="-1"></a>    <span class="dt">issn</span> = {0018-9448, 1557-9654},</span>
+<span id="cb13-14"><a href="#cb13-14" tabindex="-1"></a>    <span class="dt">url</span> = {https://ieeexplore.ieee.org/document/1053964/},</span>
+<span id="cb13-15"><a href="#cb13-15" tabindex="-1"></a>    <span class="dt">doi</span> = {10.1109/TIT.1967.1053964},</span>
+<span id="cb13-16"><a href="#cb13-16" tabindex="-1"></a>    <span class="dt">number</span> = {1},</span>
+<span id="cb13-17"><a href="#cb13-17" tabindex="-1"></a>    <span class="dt">urldate</span> = {2026-02-26},</span>
+<span id="cb13-18"><a href="#cb13-18" tabindex="-1"></a>    <span class="dt">journal</span> = {IEEE Transactions on Information Theory},</span>
+<span id="cb13-19"><a href="#cb13-19" tabindex="-1"></a>    <span class="dt">author</span> = {Cover, T. and Hart, P.},</span>
+<span id="cb13-20"><a href="#cb13-20" tabindex="-1"></a>    <span class="dt">month</span> = <span class="st">jan</span>,</span>
+<span id="cb13-21"><a href="#cb13-21" tabindex="-1"></a>    <span class="dt">year</span> = {1967},</span>
+<span id="cb13-22"><a href="#cb13-22" tabindex="-1"></a>    <span class="dt">pages</span> = {21--27},</span>
+<span id="cb13-23"><a href="#cb13-23" tabindex="-1"></a>}</span>
+<span id="cb13-24"><a href="#cb13-24" tabindex="-1"></a></span>
+<span id="cb13-25"><a href="#cb13-25" tabindex="-1"></a><span class="va">@book</span>{<span class="ot">robert_monte_2004</span>,</span>
+<span id="cb13-26"><a href="#cb13-26" tabindex="-1"></a>    <span class="dt">address</span> = {New York, NY},</span>
+<span id="cb13-27"><a href="#cb13-27" tabindex="-1"></a>    <span class="dt">series</span> = {Springer {Texts} in {Statistics}},</span>
+<span id="cb13-28"><a href="#cb13-28" tabindex="-1"></a>    <span class="dt">title</span> = {Monte {Carlo} {Statistical} {Methods}},</span>
+<span id="cb13-29"><a href="#cb13-29" tabindex="-1"></a>    <span class="dt">copyright</span> = {http://www.springer.com/tdm},</span>
+<span id="cb13-30"><a href="#cb13-30" tabindex="-1"></a>    <span class="dt">isbn</span> = {978-1-4419-1939-7 978-1-4757-4145-2},</span>
+<span id="cb13-31"><a href="#cb13-31" tabindex="-1"></a>    <span class="dt">url</span> = {http://link.springer.com/10.1007/978-1-4757-4145-2},</span>
+<span id="cb13-32"><a href="#cb13-32" tabindex="-1"></a>    <span class="dt">urldate</span> = {2026-02-26},</span>
+<span id="cb13-33"><a href="#cb13-33" tabindex="-1"></a>    <span class="dt">publisher</span> = {Springer New York},</span>
+<span id="cb13-34"><a href="#cb13-34" tabindex="-1"></a>    <span class="dt">author</span> = {Robert, Christian P. and Casella, George},</span>
+<span id="cb13-35"><a href="#cb13-35" tabindex="-1"></a>    <span class="dt">year</span> = {2004},</span>
+<span id="cb13-36"><a href="#cb13-36" tabindex="-1"></a>    <span class="dt">doi</span> = {10.1007/978-1-4757-4145-2},</span>
+<span id="cb13-37"><a href="#cb13-37" tabindex="-1"></a>    <span class="dt">file</span> = {全文:/Users/renyuxi/Zotero/storage/3LM333I7/Robert和Casella - 2004 - Monte Carlo Statistical Methods.pdf:application/pdf},</span>
+<span id="cb13-38"><a href="#cb13-38" tabindex="-1"></a>}</span>
+<span id="cb13-39"><a href="#cb13-39" tabindex="-1"></a></span>
+<span id="cb13-40"><a href="#cb13-40" tabindex="-1"></a><span class="va">@book</span>{<span class="ot">hastie_elements_2009</span>,</span>
+<span id="cb13-41"><a href="#cb13-41" tabindex="-1"></a>    <span class="dt">address</span> = {New York, NY},</span>
+<span id="cb13-42"><a href="#cb13-42" tabindex="-1"></a>    <span class="dt">series</span> = {Springer {Series} in {Statistics}},</span>
+<span id="cb13-43"><a href="#cb13-43" tabindex="-1"></a>    <span class="dt">title</span> = {The {Elements} of {Statistical} {Learning}},</span>
+<span id="cb13-44"><a href="#cb13-44" tabindex="-1"></a>    <span class="dt">copyright</span> = {http://www.springer.com/tdm},</span>
+<span id="cb13-45"><a href="#cb13-45" tabindex="-1"></a>    <span class="dt">isbn</span> = {978-0-387-84857-0 978-0-387-84858-7},</span>
+<span id="cb13-46"><a href="#cb13-46" tabindex="-1"></a>    <span class="dt">url</span> = {http://link.springer.com/10.1007/978-0-387-84858-7},</span>
+<span id="cb13-47"><a href="#cb13-47" tabindex="-1"></a>    <span class="dt">urldate</span> = {2026-02-26},</span>
+<span id="cb13-48"><a href="#cb13-48" tabindex="-1"></a>    <span class="dt">publisher</span> = {Springer New York},</span>
+<span id="cb13-49"><a href="#cb13-49" tabindex="-1"></a>    <span class="dt">author</span> = {Hastie, Trevor and Tibshirani, Robert and Friedman, Jerome},</span>
+<span id="cb13-50"><a href="#cb13-50" tabindex="-1"></a>    <span class="dt">year</span> = {2009},</span>
+<span id="cb13-51"><a href="#cb13-51" tabindex="-1"></a>    <span class="dt">doi</span> = {10.1007/978-0-387-84858-7},</span>
+<span id="cb13-52"><a href="#cb13-52" tabindex="-1"></a>}</span>
+<span id="cb13-53"><a href="#cb13-53" tabindex="-1"></a></span>
+<span id="cb13-54"><a href="#cb13-54" tabindex="-1"></a><span class="va">@book</span>{<span class="ot">gareth_james_introduction_2013</span>,</span>
+<span id="cb13-55"><a href="#cb13-55" tabindex="-1"></a>    <span class="dt">address</span> = {New York, NY},</span>
+<span id="cb13-56"><a href="#cb13-56" tabindex="-1"></a>    <span class="dt">series</span> = {Springer {Texts} in {Statistics}},</span>
+<span id="cb13-57"><a href="#cb13-57" tabindex="-1"></a>    <span class="dt">title</span> = {An {Introduction} to {Statistical} {Learning}},</span>
+<span id="cb13-58"><a href="#cb13-58" tabindex="-1"></a>    <span class="dt">volume</span> = {103},</span>
+<span id="cb13-59"><a href="#cb13-59" tabindex="-1"></a>    <span class="dt">copyright</span> = {http://www.springer.com/tdm},</span>
+<span id="cb13-60"><a href="#cb13-60" tabindex="-1"></a>    <span class="dt">isbn</span> = {978-1-4614-7137-0 978-1-4614-7138-7},</span>
+<span id="cb13-61"><a href="#cb13-61" tabindex="-1"></a>    <span class="dt">url</span> = {http://link.springer.com/10.1007/978-1-4614-7138-7},</span>
+<span id="cb13-62"><a href="#cb13-62" tabindex="-1"></a>    <span class="dt">urldate</span> = {2026-02-26},</span>
+<span id="cb13-63"><a href="#cb13-63" tabindex="-1"></a>    <span class="dt">publisher</span> = {Springer New York},</span>
+<span id="cb13-64"><a href="#cb13-64" tabindex="-1"></a>    <span class="dt">author</span> = {{Gareth James} and Witten, Daniela and Hastie, Trevor and Tibshirani, Robert},</span>
+<span id="cb13-65"><a href="#cb13-65" tabindex="-1"></a>    <span class="dt">year</span> = {2013},</span>
+<span id="cb13-66"><a href="#cb13-66" tabindex="-1"></a>    <span class="dt">doi</span> = {10.1007/978-1-4614-7138-7},</span>
+<span id="cb13-67"><a href="#cb13-67" tabindex="-1"></a>}</span></code></pre></div>
 <blockquote>
 <p><strong>Note:</strong> The figures produced in this R Markdown
 document are preliminary drafts for illustrating patterns and verifying
 results. They do not represent the final figures。</p>
 </blockquote>
 <div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
-<div id="ref-cover1967nearest" class="csl-entry">
-Cover, TM, and PE Hart. 1967. <span>“Nearest Neighbour Pattern
-Recognition.”</span> <em>IEEE Trans. On Information Theory</em> 13 (1):
-21–27.
+<div id="ref-cover_nearest_1967" class="csl-entry">
+Cover, T., and P. Hart. 1967. <span>“Nearest Neighbor Pattern
+Classification.”</span> <em>IEEE Transactions on Information Theory</em>
+13 (1): 21–27. <a href="https://doi.org/10.1109/TIT.1967.1053964">https://doi.org/10.1109/TIT.1967.1053964</a>.
 </div>
-<div id="ref-hastie2009elements" class="csl-entry">
-Hastie, Trevor, Robert Tibshirani, Jerome H Friedman, and Jerome H
-Friedman. 2009. <em>The Elements of Statistical Learning: Data Mining,
-Inference, and Prediction</em>. Vol. 2. Springer.
+<div id="ref-gareth_james_introduction_2013" class="csl-entry">
+Gareth James, Daniela Witten, Trevor Hastie, and Robert Tibshirani.
+2013. <em>An <span>Introduction</span> to <span>Statistical</span>
+<span>Learning</span></em>. Vol. 103. Springer <span>Texts</span> in
+<span>Statistics</span>. New York, NY: Springer New York. <a href="https://doi.org/10.1007/978-1-4614-7138-7">https://doi.org/10.1007/978-1-4614-7138-7</a>.
 </div>
-<div id="ref-james2013introduction" class="csl-entry">
-James, Gareth, Daniela Witten, Trevor Hastie, and Robert Tibshirani.
-2013. <span>“An Introduction to Statistical Learning with Applications
-in r.”</span>
+<div id="ref-hastie_elements_2009" class="csl-entry">
+Hastie, Trevor, Robert Tibshirani, and Jerome Friedman. 2009. <em>The
+<span>Elements</span> of <span>Statistical</span>
+<span>Learning</span></em>. Springer <span>Series</span> in
+<span>Statistics</span>. New York, NY: Springer New York. <a href="https://doi.org/10.1007/978-0-387-84858-7">https://doi.org/10.1007/978-0-387-84858-7</a>.
 </div>
-<div id="ref-robert2004monte" class="csl-entry">
-Robert, Christian P, George Casella, and George Casella. 2004. <em>Monte
-Carlo Statistical Methods</em>. Vol. 2. Springer.
+<div id="ref-robert_monte_2004" class="csl-entry">
+Robert, Christian P., and George Casella. 2004. <em>Monte
+<span>Carlo</span> <span>Statistical</span> <span>Methods</span></em>.
+Springer <span>Texts</span> in <span>Statistics</span>. New York, NY:
+Springer New York. <a href="https://doi.org/10.1007/978-1-4757-4145-2">https://doi.org/10.1007/978-1-4757-4145-2</a>.
 </div>
-<div id="ref-wickham2023r" class="csl-entry">
-Wickham, Hadley, and Jennifer Bryan. 2023. <em>R Packages</em>. &quot;
-O’Reilly Media, Inc.&quot;.
+<div id="ref-wickham_r_2023" class="csl-entry">
+Wickham, Hadley, and Jennifer Bryan. 2023. <span>“R Packages.”</span> <a href="https://r-pkgs.org/">https://r-pkgs.org/</a>.
 </div>
 </div>
 </div>
