@@ -1,0 +1,170 @@
+---
+title: "Monte Carlo Study of the MSE Decomposition in k-NN Regression"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: bibliography.bib
+nocite: "@*"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+devtools::load_all("..")
+```
+
+## Overview
+
+This vignette demonstrates a minimal Monte Carlo framework to study the **mean squared error (MSE)** decomposition for **k-nearest neighbors (k-NN) regression**.
+
+We work under a known data generating process (DGP):
+
+\[
+Y = f(X) + \varepsilon, \qquad X \sim \mathrm{Unif}(0,1)^d,\quad \varepsilon \sim \mathcal{N}(0,\sigma^2).
+\]
+
+The goal is to estimate (pointwise on a grid) the components:
+
+- **Bias**: \( \mathrm{Bias}(x) = E[\hat f(x)] - f(x) \)
+- **Variance**: \( \mathrm{Var}(\hat f(x)) \)
+- **MSE for estimating the signal**: \( \mathrm{MSE}_f(x) = \mathrm{Bias}(x)^2 + \mathrm{Var}(\hat f(x)) \)
+- **MSE for predicting outcomes**: \( \mathrm{MSE}_Y(x) = \mathrm{MSE}_f(x) + \sigma^2 \)
+
+## DGP and target functions
+
+We support two target functions:
+
+1. **Baseline (1D)**: \( f(x) = \sin(2\pi x) \)
+2. **Dimensionality extension (2D)**: \( f(x_1, x_2) = \sin(\sqrt{x_1^2 + x_2^2}) \)
+
+```{r}
+x <- dgp_x(n = 10, d = 1, seed = 1)
+y <- dgp_y(x, sigma = 0.2, type = "1d", seed = 2)
+head(cbind(x, y))
+```
+
+## Monte Carlo bias–variance decomposition (1D)
+
+Below is a small Monte Carlo run (smaller B for vignette speed; the project default is typically B=500).
+
+```{r}
+res_1d <- mc_knn_decomp(
+  n = 200, k = 15, B = 200,
+  sigma = 0.2, d = 1, type = "1d",
+  grid_size = 101, seed = 123
+)
+
+str(res_1d$settings)
+head(res_1d$pointwise)
+```
+
+### Visualizing the decomposition
+
+```{r}
+plot_mse_1d(res_1d, show = c("bias2", "variance", "mse_y"))
+```
+
+### Comparing \hat f(x) (mean prediction) to the true f(x)
+
+```{r}
+pw <- res_1d$pointwise
+plot(pw$x1, pw$f_true, type = "l", xlab = "x", ylab = "Value",
+     main = "True f(x) vs Monte Carlo mean of k-NN predictions")
+lines(pw$x1, pw$f_hat_mean)
+legend("topright", legend = c("f(x)", "E[ f_hat(x) ]"), lty = 1, bty = "n")
+```
+
+## Scanning k to find an empirical optimal k
+
+We can scan over candidate k values and compute the grid-averaged MSE.
+
+```{r}
+k_values <- c(1, 3, 5, 10, 15, 25, 40)
+curve <- mc_knn_curve(
+  k_values = k_values,
+  n = 200, B = 200, sigma = 0.2,
+  d = 1, type = "1d",
+  grid_size = 101, seed = 10,
+  target = "y"
+)
+curve
+```
+
+```{r}
+plot(curve$k, curve$avg_mse, type = "b",
+     xlab = "k", ylab = "Average MSE over grid",
+     main = "k-scan for k-NN (Monte Carlo average MSE)")
+```
+
+## 2D illustration
+
+The 2D case uses the same functions; predictions are evaluated on a grid on \([0,1]^2\).
+For a vignette, use a smaller grid to keep runtime reasonable.
+
+```{r include=FALSE}
+res_2d <- mc_knn_decomp(
+  n = 200, k = 20, B = 100,
+  sigma = 0.2, d = 2, type = "2d",
+  grid_size = 31, seed = 99
+)
+head(res_2d$pointwise)
+```
+
+## Test output (example)
+
+In the repository, tests are written in a separate file using **testthat**.  
+To run the tests locally:
+
+```r
+# In the project root:
+# install.packages("testthat")
+# testthat::test_file("test.R")
+```
+
+(For the Basic Implementation Check submission, include the `test.R` file in the repo.)
+
+## References (BibTeX)
+
+```bibtex
+@book{robert2004monte,
+  title={Monte Carlo statistical methods},
+  author={Robert, Christian P and Casella, George and Casella, George},
+  volume={2},
+  year={2004},
+  publisher={Springer}
+}
+
+@article{cover1967nearest,
+  title={Nearest neighbour pattern recognition},
+  author={Cover, TM and Hart, PE},
+  journal={IEEE Trans. on information theory},
+  volume={13},
+  number={1},
+  pages={21--27},
+  year={1967}
+}
+
+@article{james2013introduction,
+  title={An introduction to statistical learning with applications in R},
+  author={James, Gareth and Witten, Daniela and Hastie, Trevor and Tibshirani, Robert},
+  year={2013},
+  publisher={Springer}
+}
+
+@book{hastie2009elements,
+  title={The elements of statistical learning: data mining, inference, and prediction},
+  author={Hastie, Trevor and Tibshirani, Robert and Friedman, Jerome H and Friedman, Jerome H},
+  volume={2},
+  year={2009},
+  publisher={Springer}
+}
+
+@book{wickham2023r,
+  title={R packages},
+  author={Wickham, Hadley and Bryan, Jennifer},
+  year={2023},
+  publisher={" O'Reilly Media, Inc."}
+}
+```
+> **Note:** The figures produced in this R Markdown document are preliminary drafts for illustrating patterns and verifying results. They do not represent the final figures。

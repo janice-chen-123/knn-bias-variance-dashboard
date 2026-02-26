@@ -1,0 +1,65 @@
+---
+title: "STA380 Project Proposal"
+subtitle: "Monte Carlo Study of the Bias–Variance Decomposition in k-NN"
+author: "Jiachen Chen, Yiwen Zhao, Yuxi Ren, Jintong Li"
+date: 
+  -"jiachenz.chen@mail.utoronto.ca, ywen.zhao@mail.utoronto.ca" 
+  -"yuxi.ren@mail.utoronto.ca, jintong.li@mail.utoronto.ca"
+output:
+  pdf_document:
+    latex_engine: xelatex
+fontsize: 11pt
+geometry: margin=1in
+bibliography: bibliography.bib
+header-includes:
+  - \usepackage{xcolor}
+---
+
+# 1 Project Topic
+
+Monte Carlo Study of the Bias–Variance Decomposition in k-Nearest Neighbors Regression.
+This project builds on the bias–variance framework discussed in classical statistical learning literature [@james2013introduction]. 
+
+
+# 2 Simulation vs. Dataset
+
+This project is based entirely on simulated data.
+Using simulation allows us to specify the true data-generating mechanism and directly evaluate the bias, variance, and mean squared error of k-NN regression estimators under controlled settings.
+In particular, simulation makes it possible to isolate the effect of the neighborhood size k, sample size, and noise level on the bias and variance components of the prediction error, which would not be directly observable using real-world datasets [@voss2013introduction].
+
+
+# 3 Project Details
+
+Our project implements a Monte Carlo framework to dissect the Mean Squared Error (MSE) of k-NN. The simulation is structured as follows:
+
+- **Data Generating Process (DGP):** We define $Y = f(X) + \epsilon$, where $X \sim U(0,1)$ and $\epsilon \sim N(0, \sigma^2)$. The uniform distribution of $X$ provides a standardized domain for evaluating neighborhood density without edge-case distortion [@rizzo2019statistical].
+- **True Functions ($f(X)$):** To maximize the contrast in dimensionality, we utilize two primary functions:
+    - **Baseline (1D):** $f(x) = \sin(2\pi x)$, allowing for a clear visualization of the bias and variance decomposition in a simple setting.
+    - **Dimensionality Extension (2D):** $f(x_1, x_2) = \sin(\sqrt{x_1^2 + x_2^2})$ to illustrate why k-NN stability degrades as the feature space becomes sparse [@openai_chatgpt].
+- **MSE Evaluation (Monte Carlo vs. Theoretical):** To address the significance of the "Optimal $k$," our Shiny app will output two distinct MSE curves [@r2024r; @chang2012shiny]:
+    1. **Monte Carlo MSE:** Calculated by averaging results across $B = 500$ independent simulations.
+    2. **Theoretical (True) MSE:** Derived from the known DGP components: $MSE = \text{Bias}^2 + \text{Variance} + \sigma^2$. 
+    - **Significance:** Comparing these two lines demonstrates how Monte Carlo estimates converge to the theoretical truth. The **Optimal $k$** identified is value that minimizes the total prediction error by decomposing it into bias and variance components.
+
+The following outputs and justifications are provided:
+
+- **Sample Size ($n = 200$):** Chosen to ensure enough local density for k-NN while remaining computationally efficient for the Shiny interface.
+- **Repetitions ($B = 500$):** We use 500 independent datasets to compute the expected prediction $E[\hat{f}(x)]$, separating "Bias" from "Variance" [@rizzo2019statistical].
+- **Optimal $k$ Evaluation:** We will plot the total MSE curve to identify the $k$ that reaches the global minimum.
+
+# 4 User Inputs (Shiny Components)
+
+User will be able to modify the following parameters to observe real-time changesin the bias and variance components of the prediction error:
+
+1. **Selection of the seed:** to ensure reproducibility of specific noisy realizations.
+2. **Adjustment of Simulation Parameters:** specifically the number of neighbors $k$, the noise standard deviation $\sigma$, and the number of repetitions $B$.
+3. **Select Dimension:** Users can choose between the univariate function and the bivariate function to examine how model performance changes with dimensionality.
+4. **Visual Output Selection:** Ability to choose between:
+- The MSE breakdown plot (Bias² vs. Variance),
+- The comparison of Monte Carlo MSE vs. True MSE,
+- The visual comparison of the estimated fit $\hat{f}(x)$ against the true DGP $f(x)$.
+5. **Plot Customization:** Modification of colors for the different error components to enhance clarity.
+
+
+# References
+
