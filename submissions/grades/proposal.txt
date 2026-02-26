@@ -1,0 +1,13 @@
+You were supposed to upload the accompanying .pdf file, as per the instructions (not deducting for now since it was also emailed, but you shouldn't be emailing these things in the future.)
+
+I think in general, as a user input, the should specify the sample size n.
+
+I see that you have referenced ChatGPT but you have not made an actual statement of AI usage (in particular, I need students to comment what they used AI for.) (-0.1)
+
+Other than that, this proposal is clear as to what actions you need to take next.
+
+0.9/1
+
+I am planning to apply bonus marks after the "Basic Implementation Check" checkpoint, because some students might be switching groups/topics/opting out. I have set a reminder to do this.
+
+
