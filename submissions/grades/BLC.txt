@@ -1,0 +1,55 @@
+since there are some changes, I have only looked at this particular version:
+https://github.com/janice-chen-123/sta380_YESorYES/commit/dec2232014b2e305c7675659fc2efbd92c5c383a
+
+so, it is possible that some of my comments are obsolete and have already been resolved or changed.
+
+I also didn't want to start a new branch and to have you guys worry about merge requests, so I won't be editing any of the documents
+correctly.
+
+
+
+vignette:
+
+I think in general you should be using different colours for the lines FOR ALL PLOTS, i.e., when trying to visualize the decomposition, Comparing f(x) (mean prediction) to the true f(x)", etc. It also should be larger. So, these plots are generally hard to see (-0.2)
+
+you don't need to include the test output example. Usually, the tests are for the developer only.
+
+
+
+the issue with your folder structure is that "test.R" should be in the same folder as "function.R". otherwise, it's hard to directly to use:
+source("function.R")
+as indicated in the "test.R" file.
+
+(-0.2; the test.R file needs to generally be accessible.)
+
+function.R:
+
+I'm confused for the need of the following comment:
+
+#' Monte Carlo k-NN Bias–Variance Toolkit
+#'
+#' Core utilities for a Monte Carlo study that decomposes the mean squared error (MSE)
+#' of k-nearest neighbors (k-NN) regression into bias and variance under a known data
+#' generating process (DGP).
+#'
+#' The DGP follows:
+#' \deqn{Y = f(X) + \varepsilon, \quad X \sim \mathrm{Unif}(0,1)^d,\ \varepsilon \sim \mathcal{N}(0,\sigma^2).}
+#'
+#' @name knn_mc_toolkit
+#' @docType package
+NULL
+
+I only use roxygen comments and write R files if it's the case that it's for an explicit function, not for a different
+description altogether...
+
+you don't need to do:
+stats::runif
+stats::rnorm
+
+note that the `stats` package is part of base R. (in class and in tests, we wrote runif() and rnorm() all of the time without loading stats.)
+
+grade:
+1.6/2
+
+bonus marks, if any, will be reflected on Quercus and will be administered later (once all assignments have been graded.)
+
