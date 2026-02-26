@@ -36,7 +36,9 @@ dgp_x <- function(n, d = 1, seed = NULL) {
 
 #' Deterministic target function f(x) for the project DGP
 #'
-#' Supported target functions:
+#' Deterministic target function used in the project DGP.
+#' 
+#' Two options are provided:
 #' \itemize{
 #'   \item \code{"1d"}: \eqn{f(x) = \sin(2\pi x)}
 #'   \item \code{"2d"}: \eqn{f(x_1,x_2) = \sin(\sqrt{x_1^2 + x_2^2})}
@@ -101,7 +103,10 @@ dgp_y <- function(x, sigma, type = c("1d", "2d"), seed = NULL) {
 
 #' k-NN regression prediction at test points
 #'
-#' Computes k-nearest neighbors regression predictions:
+#' Computes k-nearest neighbors regression predictions
+#' 
+#' For each test point, the prediction is the average response
+#' of the k closest training observations in Euclidean distance.
 #' \deqn{\hat f(x_0) = \frac{1}{k}\sum_{i \in \mathcal{N}_k(x_0)} y_i,}
 #' where \eqn{\mathcal{N}_k(x_0)} denotes the indices of the \eqn{k} closest
 #' training points to \eqn{x_0} in Euclidean distance.
@@ -181,7 +186,7 @@ make_grid <- function(grid_size = 101, d = 1) {
 
 #' Monte Carlo estimate of bias–variance decomposition for k-NN regression
 #'
-#' Runs B independent simulations from the DGP, fits k-NN, and evaluates predictions on a grid.
+#' Runs B simulations, fits k-NN each time, and evaluates predictions on a grid.
 #'
 #' Definitions (at each grid point x):
 #' \itemize{
