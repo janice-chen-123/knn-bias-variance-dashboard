@@ -1,3 +1,5 @@
+#' @importFrom stats rnorm runif var
+NULL
 #' Generate covariates X from the DGP
 #'
 #' Draws covariates according to \eqn{X \sim \mathrm{Unif}(0,1)^d}.
@@ -29,12 +31,12 @@ dgp_x <- function(n, d = 1, seed = NULL) {
 #' @export
 dgp_f <- function(x, type = c("1d", "2d")) {
   type <- match.arg(type)
-  
+
   if (type == "1d") {
     x <- as.numeric(x)
     return(sin(2 * pi * x))
   }
-  
+
   x <- as.matrix(x)
   if (ncol(x) != 2) stop("For type='2d', x must have exactly 2 columns.")
   r <- sqrt(x[, 1]^2 + x[, 2]^2)
@@ -58,7 +60,7 @@ dgp_y <- function(x, sigma, type = c("1d", "2d"), seed = NULL) {
   type <- match.arg(type)
   x <- as.matrix(x)
   if (!is.null(seed)) set.seed(seed)
-  
+
   mu <- dgp_f(if (ncol(x) == 1) x[, 1] else x, type = type)
   mu + rnorm(nrow(x), mean = 0, sd = sigma)
 }
@@ -76,28 +78,28 @@ dgp_y <- function(x, sigma, type = c("1d", "2d"), seed = NULL) {
 #' @return Numeric vector of length m.
 #' @export
 knn_predict <- function(x_train, y_train, x_test, k) {
-  
+
   x_train <- as.matrix(x_train)
   y_train <- as.numeric(y_train)
-  
+
   if (is.vector(x_test)) {
     x_test <- matrix(as.numeric(x_test), ncol = ncol(x_train))
   } else {
     x_test <- as.matrix(x_test)
   }
-  
+
   n <- nrow(x_train)
   if (k > n) stop("k cannot exceed number of training observations.")
-  
+
   preds <- numeric(nrow(x_test))
-  
+
   for (j in seq_len(nrow(x_test))) {
     diffs <- sweep(x_train, 2, x_test[j, ], "-")
     d2 <- rowSums(diffs^2)
     nn_idx <- order(d2)[seq_len(k)]
     preds[j] <- mean(y_train[nn_idx])
   }
-  
+
   preds
 }
 
@@ -110,23 +112,23 @@ knn_predict <- function(x_train, y_train, x_test, k) {
 #' @return List with x_grid and axis.
 #' @export
 make_grid <- function(grid_size = 101, d = 1) {
-  
+
   axis <- seq(0, 1, length.out = grid_size)
-  
+
   if (d == 1) {
     return(list(x_grid = matrix(axis, ncol = 1), axis = axis))
   }
-  
+
   if (d == 2) {
     gg <- expand.grid(axis, axis)
     return(list(x_grid = as.matrix(gg), axis = axis))
   }
-  
+
   stop("Only d = 1 or 2 supported.")
 }
 
 
-#' Monte Carlo Bias–Variance decomposition for k-NN
+#' Monte Carlo Bias-Variance decomposition for k-NN
 #'
 #' @param n Training sample size.
 #' @param k Number of neighbors.
@@ -147,30 +149,30 @@ mc_knn_decomp <- function(n = 200,
                           type = c("1d", "2d"),
                           grid_size = 101,
                           seed = NULL) {
-  
+
   type <- match.arg(type)
   if (!is.null(seed)) set.seed(seed)
-  
+
   grid <- make_grid(grid_size = grid_size, d = d)
   x_grid <- grid$x_grid
   f_true <- dgp_f(if (d == 1) x_grid[, 1] else x_grid, type = type)
-  
+
   m <- nrow(x_grid)
   preds <- matrix(NA_real_, nrow = B, ncol = m)
-  
+
   for (b in seq_len(B)) {
     x_train <- dgp_x(n = n, d = d)
     y_train <- dgp_y(x_train, sigma = sigma, type = type)
     preds[b, ] <- knn_predict(x_train, y_train, x_grid, k)
   }
-  
+
   f_hat_mean <- colMeans(preds)
   bias <- f_hat_mean - f_true
   variance <- apply(preds, 2, var)
-  
+
   mse_f <- bias^2 + variance
   mse_y <- mse_f + sigma^2
-  
+
   pointwise <- data.frame(
     x1 = x_grid[, 1],
     x2 = if (d == 2) x_grid[, 2] else NA_real_,
@@ -182,7 +184,7 @@ mc_knn_decomp <- function(n = 200,
     mse_f = mse_f,
     mse_y = mse_y
   )
-  
+
   list(
     settings = list(n = n, k = k, B = B, sigma = sigma,
                     d = d, type = type, grid_size = grid_size, seed = seed),
@@ -216,26 +218,26 @@ mc_knn_curve <- function(k_values,
                          grid_size = 101,
                          seed = NULL,
                          target = c("y", "f")) {
-  
+
   type <- match.arg(type)
   target <- match.arg(target)
-  
+
   out <- lapply(seq_along(k_values), function(i) {
-    
+
     k <- k_values[i]
-    
+
     res <- mc_knn_decomp(
       n = n, k = k, B = B, sigma = sigma,
       d = d, type = type, grid_size = grid_size,
       seed = if (is.null(seed)) NULL else seed + i
     )
-    
+
     pw <- res$pointwise
     avg <- if (target == "y") mean(pw$mse_y) else mean(pw$mse_f)
-    
+
     data.frame(k = k, avg_mse = avg)
   })
-  
+
   do.call(rbind, out)
 }
 
@@ -249,22 +251,22 @@ mc_knn_curve <- function(k_values,
 #' @export
 plot_mse_1d <- function(res,
                         show = c("bias2", "variance", "mse_y")) {
-  
+
   if (res$settings$d != 1) {
     stop("plot_mse_1d() requires d = 1.")
   }
-  
+
   pw <- res$pointwise
   df <- pw[, c("x1", show)]
   names(df)[1] <- "x"
-  
+
   df_long <- tidyr::pivot_longer(
     df,
     cols = -x,
     names_to = "component",
     values_to = "value"
   )
-  
+
   ggplot2::ggplot(df_long,
                   ggplot2::aes(x = x,
                                y = value,
@@ -289,7 +291,7 @@ plot_mse_1d <- function(res,
 #'
 #' This is a convenience wrapper around \code{mc_knn_decomp()} that returns
 #' the **grid-averaged** components for each candidate \code{k}. It's useful
-#' for making the classic bias–variance tradeoff plot versus \code{k}.
+#' for making the classic bias-variance tradeoff plot versus \code{k}.
 #'
 #' @param k_values Integer vector of candidate k values.
 #' @param n Training sample size.
@@ -311,21 +313,21 @@ mc_knn_curve_components <- function(k_values,
                                     type = c("1d", "2d"),
                                     grid_size = 101,
                                     seed = NULL) {
-  
+
   type <- match.arg(type)
-  
+
   out <- lapply(seq_along(k_values), function(i) {
-    
+
     k <- k_values[i]
-    
+
     res <- mc_knn_decomp(
       n = n, k = k, B = B, sigma = sigma,
       d = d, type = type, grid_size = grid_size,
       seed = if (is.null(seed)) NULL else seed + i
     )
-    
+
     pw <- res$pointwise
-    
+
     data.frame(
       k = k,
       avg_bias2 = mean(pw$bias2),
@@ -334,12 +336,12 @@ mc_knn_curve_components <- function(k_values,
       avg_mse_y = mean(pw$mse_y)
     )
   })
-  
+
   do.call(rbind, out)
 }
 
 
-#' Plot bias–variance tradeoff vs k using ggplot2
+#' Plot bias-variance tradeoff vs k using ggplot2
 #'
 #' @param curve_df Output of \code{mc_knn_curve_components()}.
 #' @param show Character vector of components to plot.
@@ -348,21 +350,21 @@ mc_knn_curve_components <- function(k_values,
 #' @export
 plot_curve_components <- function(curve_df,
                                   show = c("avg_bias2", "avg_variance", "avg_mse_y")) {
-  
+
   needed <- c("k", show)
   if (!all(needed %in% names(curve_df))) {
     stop("curve_df must contain columns: ", paste(needed, collapse = ", "))
   }
-  
+
   df <- curve_df[, needed, drop = FALSE]
-  
+
   df_long <- tidyr::pivot_longer(
     df,
     cols = -k,
     names_to = "component",
     values_to = "value"
   )
-  
+
   ggplot2::ggplot(df_long, ggplot2::aes(x = k, y = value,
                                         color = component, shape = component)) +
     ggplot2::geom_line(linewidth = 1) +
@@ -374,7 +376,7 @@ plot_curve_components <- function(curve_df,
     )) +
     ggplot2::theme_minimal(base_size = 14) +
     ggplot2::labs(
-      title = "Bias–variance tradeoff across k (averaged over x)",
+      title = "Bias-variance tradeoff across k (averaged over x)",
       x = "k",
       y = "Average over x",
       color = "Component",
