@@ -49,9 +49,8 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
-html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -62,7 +61,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -371,7 +370,9 @@ in k-NN Regression</h1>
 <h2>Overview</h2>
 <p>This vignette demonstrates a minimal Monte Carlo framework to study
 the <strong>mean squared error (MSE)</strong> decomposition for
-<strong>k-nearest neighbors (k-NN) regression</strong>.</p>
+<strong>k-nearest neighbors (k-NN) regression</strong>. The main purpose
+is to show how bias, variance, and prediction error behave under a known
+data-generating process.</p>
 <p>We work under a known data generating process (DGP):</p>
 <p><span class="math display">\[
 Y = f(X) + \varepsilon, \qquad X \sim \mathrm{Unif}(0,1)^d,\quad
@@ -387,6 +388,35 @@ Y = f(X) + \varepsilon, \qquad X \sim \mathrm{Unif}(0,1)^d,\quad
 <li><strong>MSE for predicting outcomes</strong>: <span class="math inline">\(\mathrm{MSE}_Y(x) = \mathrm{MSE}_f(x) +
 \sigma^2\)</span></li>
 </ul>
+</div>
+<div id="main-functions-used-in-this-vignette" class="section level2">
+<h2>Main functions used in this vignette</h2>
+<p>This vignette uses several helper functions from the package. Each
+function has a different role in the simulation workflow.</p>
+<ul>
+<li><code>dgp_x()</code> generates the predictor matrix <span class="math inline">\(X\)</span> from a uniform distribution on <span class="math inline">\([0,1]^d\)</span>.</li>
+<li><code>dgp_f()</code> evaluates the true regression function <span class="math inline">\(f(x)\)</span> under either the 1D or 2D
+setting.</li>
+<li><code>dgp_y()</code> generates the response variable <span class="math inline">\(Y\)</span> by adding random noise to the true
+signal.</li>
+<li><code>knn_predict()</code> computes k-NN regression predictions for
+a set of test points.</li>
+<li><code>make_grid()</code> creates the evaluation grid on which the
+decomposition is studied.</li>
+<li><code>mc_knn_decomp()</code> is the main simulation function. It
+repeats data generation and prediction many times and returns the
+pointwise bias, variance, and MSE quantities.</li>
+<li><code>mc_knn_curve()</code> computes the average MSE across a set of
+candidate values of <span class="math inline">\(k\)</span>.</li>
+<li><code>plot_mse_1d()</code> visualizes the pointwise decomposition
+results in the one-dimensional case.</li>
+<li><code>mc_knn_curve_components()</code> summarizes the grid-averaged
+bias, variance, and MSE components for each candidate <span class="math inline">\(k\)</span>.</li>
+<li><code>plot_curve_components()</code> plots how these averaged
+components change across different values of <span class="math inline">\(k\)</span>.</li>
+</ul>
+<p>Together, these functions provide a simple simulation framework for
+studying the bias-variance tradeoff in k-NN regression.</p>
 </div>
 <div id="dgp-and-target-functions" class="section level2">
 <h2>DGP and target functions</h2>
@@ -411,7 +441,13 @@ x_2^2})\)</span></li>
 <div id="monte-carlo-biasvariance-decomposition-1d" class="section level2">
 <h2>Monte Carlo bias–variance decomposition (1D)</h2>
 <p>Below is a small Monte Carlo run (smaller B for vignette speed; the
-project default is typically B=500).</p>
+project default is typically B=500). Next, we run
+<code>mc_knn_decomp()</code>, which is the main function for the Monte
+Carlo study. For each repetition, it generates a training sample,
+applies k-NN regression, predicts on a fixed grid, and then summarizes
+the pointwise bias, variance, and MSE. In this vignette, we use a
+smaller value of <span class="math inline">\(B\)</span> to keep the
+running time reasonable.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>res_1d <span class="ot">&lt;-</span> <span class="fu">mc_knn_decomp</span>(</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">200</span>, <span class="at">k =</span> <span class="dv">15</span>, <span class="at">B =</span> <span class="dv">200</span>,</span>
 <span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="at">sigma =</span> <span class="fl">0.2</span>, <span class="at">d =</span> <span class="dv">1</span>, <span class="at">type =</span> <span class="st">&quot;1d&quot;</span>,</span>
@@ -517,25 +553,21 @@ MSE.</p>
 ## 7 40 0.06690294</code></pre>
 <div id="biasvariance-tradeoff-across-k" class="section level3">
 <h3>Bias–Variance tradeoff across k</h3>
-<p>To visualize the classic bias–variance tradeoff, we scan a set of
-candidate values of <strong>k</strong> and compute the grid-averaged
-decomposition components.<br />
-The helper function <code>mc_knn_curve_components()</code> is a wrapper
-around <code>mc_knn_decomp()</code>:</p>
+<p>To examine the full bias-variance tradeoff, we use
+<code>mc_knn_curve_components()</code>, which extends
+<code>mc_knn_curve()</code> by keeping the separate averaged components
+instead of only the total MSE.</p>
+<p>For each candidate <span class="math inline">\(k\)</span>, the
+function:</p>
 <ul>
-<li>For each <code>k</code> in <code>k_values</code>, it runs a Monte
-Carlo experiment (B replicates),</li>
-<li>Computes pointwise <strong>Bias²</strong>,
-<strong>Variance</strong>, and <strong>MSE</strong> on a prediction
-grid,</li>
-<li>Then averages these quantities over the grid to produce one row per
-<code>k</code>.</li>
+<li>runs <code>mc_knn_decomp()</code> for <span class="math inline">\(B\)</span> Monte Carlo repetitions,</li>
+<li>computes pointwise Bias<span class="math inline">\(^2\)</span>,
+Variance, and MSE on the evaluation grid,</li>
+<li>averages these quantities over the grid.</li>
 </ul>
-<p>This provides a compact summary suitable for plotting the tradeoff
-curves versus <code>k</code>.<br />
-We then use <code>plot_curve_components()</code> to plot selected
-components (e.g., <code>avg_bias2</code>, <code>avg_variance</code>,
-<code>avg_mse_y</code>).</p>
+<p>This output makes it easier to see how increasing <span class="math inline">\(k\)</span> usually decreases variance but
+increases bias. We then use <code>plot_curve_components()</code> to
+visualize these averaged components across candidate values of <span class="math inline">\(k\)</span>.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a>curve_comp <span class="ot">&lt;-</span> <span class="fu">mc_knn_curve_components</span>(</span>
 <span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a>  <span class="at">k_values =</span> k_values,</span>
 <span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a>  <span class="at">n =</span> <span class="dv">200</span>, <span class="at">B =</span> <span class="dv">200</span>, <span class="at">sigma =</span> <span class="fl">0.2</span>,</span>

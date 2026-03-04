@@ -3,10 +3,10 @@ title: "Monte Carlo Study of the MSE Decomposition in k-NN Regression"
 author: "Jiachen Chen, Yiwen Zhao, Yuxi Ren, Jintong Li"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette}
+  %\VignetteIndexEntry{Monte Carlo Study of the MSE Decomposition in k-NN Regression}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-bibliography: bibliography.bib
+bibliography: "bibliography.bib"
 nocite: "@*"
 ---
 
@@ -17,7 +17,7 @@ source("../Package Compiling/function5.0.R")
 
 ## Overview
 
-This vignette demonstrates a minimal Monte Carlo framework to study the **mean squared error (MSE)** decomposition for **k-nearest neighbors (k-NN) regression**.
+This vignette demonstrates a minimal Monte Carlo framework to study the **mean squared error (MSE)** decomposition for **k-nearest neighbors (k-NN) regression**. The main purpose is to show how bias, variance, and prediction error behave under a known data-generating process.
 
 We work under a known data generating process (DGP):
 
@@ -31,6 +31,23 @@ The goal is to estimate (pointwise on a grid) the components:
 - **Variance**: \( \mathrm{Var}(\hat f(x)) \)
 - **MSE for estimating the signal**: \( \mathrm{MSE}_f(x) = \mathrm{Bias}(x)^2 + \mathrm{Var}(\hat f(x)) \)
 - **MSE for predicting outcomes**: \( \mathrm{MSE}_Y(x) = \mathrm{MSE}_f(x) + \sigma^2 \)
+
+## Main functions used in this vignette
+
+This vignette uses several helper functions from the package. Each function has a different role in the simulation workflow.
+
+- `dgp_x()` generates the predictor matrix \(X\) from a uniform distribution on \([0,1]^d\).
+- `dgp_f()` evaluates the true regression function \(f(x)\) under either the 1D or 2D setting.
+- `dgp_y()` generates the response variable \(Y\) by adding random noise to the true signal.
+- `knn_predict()` computes k-NN regression predictions for a set of test points.
+- `make_grid()` creates the evaluation grid on which the decomposition is studied.
+- `mc_knn_decomp()` is the main simulation function. It repeats data generation and prediction many times and returns the pointwise bias, variance, and MSE quantities.
+- `mc_knn_curve()` computes the average MSE across a set of candidate values of \(k\).
+- `plot_mse_1d()` visualizes the pointwise decomposition results in the one-dimensional case.
+- `mc_knn_curve_components()` summarizes the grid-averaged bias, variance, and MSE components for each candidate \(k\).
+- `plot_curve_components()` plots how these averaged components change across different values of \(k\).
+
+Together, these functions provide a simple simulation framework for studying the bias-variance tradeoff in k-NN regression.
 
 ## DGP and target functions
 
@@ -48,7 +65,7 @@ head(cbind(x, y))
 ## Monte Carlo bias–variance decomposition (1D)
 
 Below is a small Monte Carlo run (smaller B for vignette speed; the project default is typically B=500).
-
+Next, we run `mc_knn_decomp()`, which is the main function for the Monte Carlo study. For each repetition, it generates a training sample, applies k-NN regression, predicts on a fixed grid, and then summarizes the pointwise bias, variance, and MSE. In this vignette, we use a smaller value of \(B\) to keep the running time reasonable.
 ```{r}
 res_1d <- mc_knn_decomp(
   n = 200, k = 15, B = 200,
@@ -121,15 +138,15 @@ curve
 
 ### Bias–Variance tradeoff across k 
 
-To visualize the classic bias–variance tradeoff, we scan a set of candidate values of **k** and compute the grid-averaged decomposition components.  
-The helper function `mc_knn_curve_components()` is a wrapper around `mc_knn_decomp()`:
+To examine the full bias-variance tradeoff, we use `mc_knn_curve_components()`, which extends `mc_knn_curve()` by keeping the separate averaged components instead of only the total MSE.
 
-- For each `k` in `k_values`, it runs a Monte Carlo experiment (B replicates),
-- Computes pointwise **Bias²**, **Variance**, and **MSE** on a prediction grid,
-- Then averages these quantities over the grid to produce one row per `k`.
+For each candidate \(k\), the function:
 
-This provides a compact summary suitable for plotting the tradeoff curves versus `k`.  
-We then use `plot_curve_components()` to plot selected components (e.g., `avg_bias2`, `avg_variance`, `avg_mse_y`).
+- runs `mc_knn_decomp()` for \(B\) Monte Carlo repetitions,
+- computes pointwise Bias\(^2\), Variance, and MSE on the evaluation grid,
+- averages these quantities over the grid.
+
+This output makes it easier to see how increasing \(k\) usually decreases variance but increases bias. We then use `plot_curve_components()` to visualize these averaged components across candidate values of \(k\).
 
 ```{r, fig.width=8, fig.height=5}
 curve_comp <- mc_knn_curve_components(
