@@ -1,0 +1,252 @@
+---
+title: "Monte Carlo Study of the MSE Decomposition in k-NN Regression"
+author: "Jiachen Chen, Yiwen Zhao, Yuxi Ren, Jintong Li"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: bibliography.bib
+nocite: "@*"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+source("../Package Compiling/function5.0.R")
+```
+
+## Overview
+
+This vignette demonstrates a minimal Monte Carlo framework to study the **mean squared error (MSE)** decomposition for **k-nearest neighbors (k-NN) regression**.
+
+We work under a known data generating process (DGP):
+
+\[
+Y = f(X) + \varepsilon, \qquad X \sim \mathrm{Unif}(0,1)^d,\quad \varepsilon \sim \mathcal{N}(0,\sigma^2).
+\]
+
+The goal is to estimate (pointwise on a grid) the components:
+
+- **Bias**: \( \mathrm{Bias}(x) = E[\hat f(x)] - f(x) \)
+- **Variance**: \( \mathrm{Var}(\hat f(x)) \)
+- **MSE for estimating the signal**: \( \mathrm{MSE}_f(x) = \mathrm{Bias}(x)^2 + \mathrm{Var}(\hat f(x)) \)
+- **MSE for predicting outcomes**: \( \mathrm{MSE}_Y(x) = \mathrm{MSE}_f(x) + \sigma^2 \)
+
+## DGP and target functions
+
+We support two target functions:
+
+1. **Baseline (1D)**: \( f(x) = \sin(2\pi x) \)
+2. **Dimensionality extension (2D)**: \( f(x_1, x_2) = \sin(\sqrt{x_1^2 + x_2^2}) \)
+
+```{r}
+x <- dgp_x(n = 10, d = 1, seed = 1)
+y <- dgp_y(x, sigma = 0.2, type = "1d", seed = 2)
+head(cbind(x, y))
+```
+
+## Monte Carlo bias–variance decomposition (1D)
+
+Below is a small Monte Carlo run (smaller B for vignette speed; the project default is typically B=500).
+
+```{r}
+res_1d <- mc_knn_decomp(
+  n = 200, k = 15, B = 200,
+  sigma = 0.2, d = 1, type = "1d",
+  grid_size = 101, seed = 123
+)
+
+str(res_1d$settings)
+head(res_1d$pointwise)
+```
+
+## Assumption Check
+
+In our simulation, the predictor variable $X$ is generated independently, and the noise term $\epsilon$ is also generated independently with mean zero and constant variance. This ensures that the observations satisfy the independence and constant variance assumptions required for bias–variance decomposition.
+
+The true regression function is smooth, which makes k-NN regression appropriate for estimating the conditional mean function. Therefore, the assumptions underlying our simulation and analysis are satisfied.
+
+### Visualizing the decomposition
+
+We next visualize the **pointwise** bias–variance decomposition across the input space.
+For each grid location \(x\), the Monte Carlo experiment estimates Bias\(^2(x)\), Var\((\hat f(x))\), and the total prediction error \( \text{MSE}_Y(x)\).
+As expected, \( \text{MSE}_Y(x) \approx \text{Bias}^2(x) + \text{Var}(\hat f(x)) + \sigma^2 \), and boundary regions may show larger errors due to fewer neighbors on one side.
+
+```{r, fig.width=8, fig.height=5}
+plot_mse_1d(res_1d, show = c("bias2", "variance", "mse_y"))
+```
+
+### Comparing \hat f(x) (mean prediction) to the true f(x)
+
+This plot overlays the true regression function \(f(x)\) with the Monte Carlo estimate of the mean k-NN predictor \( \mathbb{E}[\hat f(x)] \) at each grid point.
+The gap between the two curves visualizes **systematic error (bias)**: larger deviations indicate higher bias for the chosen \(k\).
+
+```{r, fig.width=8, fig.height=5, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+pw <- res_1d$pointwise
+df <- data.frame(x = pw$x1, f_true = pw$f_true, f_hat_mean = pw$f_hat_mean)
+
+ggplot(df, aes(x = x)) +
+  geom_line(aes(y = f_true, color = "True f(x)"), linewidth = 1.2) +
+  geom_line(aes(y = f_hat_mean, color = "Monte Carlo mean E[f_hat(x)]"), linewidth = 1.2) +
+  scale_color_manual(values = c(
+    "True f(x)" = "#0000FF",
+    "Monte Carlo mean E[f_hat(x)]" = "#FF00FF"
+  )) +
+  labs(
+    title = "True regression function vs Monte Carlo mean of k-NN predictions",
+    x = "x", y = "Value", color = NULL
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "top")
+```
+
+
+## Scanning k to find an empirical optimal k
+
+We can scan over candidate k values and compute the grid-averaged MSE.
+
+```{r}
+k_values <- c(1, 3, 5, 10, 15, 25, 40)
+curve <- mc_knn_curve(
+  k_values = k_values,
+  n = 200, B = 200, sigma = 0.2,
+  d = 1, type = "1d",
+  grid_size = 101, seed = 10,
+  target = "y"
+)
+curve
+```
+
+### Bias–Variance tradeoff across k 
+
+To visualize the classic bias–variance tradeoff, we scan a set of candidate values of **k** and compute the grid-averaged decomposition components.  
+The helper function `mc_knn_curve_components()` is a wrapper around `mc_knn_decomp()`:
+
+- For each `k` in `k_values`, it runs a Monte Carlo experiment (B replicates),
+- Computes pointwise **Bias²**, **Variance**, and **MSE** on a prediction grid,
+- Then averages these quantities over the grid to produce one row per `k`.
+
+This provides a compact summary suitable for plotting the tradeoff curves versus `k`.  
+We then use `plot_curve_components()` to plot selected components (e.g., `avg_bias2`, `avg_variance`, `avg_mse_y`).
+
+```{r, fig.width=8, fig.height=5}
+curve_comp <- mc_knn_curve_components(
+  k_values = k_values,
+  n = 200, B = 200, sigma = 0.2,
+  d = 1, type = "1d",
+  grid_size = 101, seed = 10
+)
+
+plot_curve_components(curve_comp, show = c("avg_bias2", "avg_variance", "avg_mse_y"))
+```
+
+## 2D illustration
+
+The 2D case uses the same functions; predictions are evaluated on a grid on \([0,1]^2\).
+For a vignette, use a smaller grid to keep runtime reasonable.
+
+```{r include=FALSE}
+res_2d <- mc_knn_decomp(
+  n = 200, k = 20, B = 100,
+  sigma = 0.2, d = 2, type = "2d",
+  grid_size = 31, seed = 99
+)
+head(res_2d$pointwise)
+```
+
+
+## Test output (example)
+
+In the repository, tests are written in a separate file using **testthat**.  
+To run the tests locally:
+
+```r
+# In the project root:
+# install.packages("testthat")
+# testthat::test_file("test.R")
+```
+
+(For the Basic Implementation Check submission, include the `test.R` file in the repo.)
+
+## References (BibTeX)
+
+```bibtex
+@misc{wickham_r_2023,
+	title = {R packages},
+	url = {https://r-pkgs.org/},
+	urldate = {2026-02-25},
+	author = {Wickham, Hadley and Bryan, Jennifer},
+	year = {2023},
+}
+
+@article{cover_nearest_1967,
+	title = {Nearest neighbor pattern classification},
+	volume = {13},
+	copyright = {https://ieeexplore.ieee.org/Xplorehelp/downloads/license-information/IEEE.html},
+	issn = {0018-9448, 1557-9654},
+	url = {https://ieeexplore.ieee.org/document/1053964/},
+	doi = {10.1109/TIT.1967.1053964},
+	number = {1},
+	urldate = {2026-02-26},
+	journal = {IEEE Transactions on Information Theory},
+	author = {Cover, T. and Hart, P.},
+	month = jan,
+	year = {1967},
+	pages = {21--27},
+}
+
+@book{robert_monte_2004,
+	address = {New York, NY},
+	series = {Springer {Texts} in {Statistics}},
+	title = {Monte {Carlo} {Statistical} {Methods}},
+	copyright = {http://www.springer.com/tdm},
+	isbn = {978-1-4419-1939-7 978-1-4757-4145-2},
+	url = {http://link.springer.com/10.1007/978-1-4757-4145-2},
+	urldate = {2026-02-26},
+	publisher = {Springer New York},
+	author = {Robert, Christian P. and Casella, George},
+	year = {2004},
+	doi = {10.1007/978-1-4757-4145-2},
+	file = {全文:/Users/renyuxi/Zotero/storage/3LM333I7/Robert和Casella - 2004 - Monte Carlo Statistical Methods.pdf:application/pdf},
+}
+
+@book{hastie_elements_2009,
+	address = {New York, NY},
+	series = {Springer {Series} in {Statistics}},
+	title = {The {Elements} of {Statistical} {Learning}},
+	copyright = {http://www.springer.com/tdm},
+	isbn = {978-0-387-84857-0 978-0-387-84858-7},
+	url = {http://link.springer.com/10.1007/978-0-387-84858-7},
+	urldate = {2026-02-26},
+	publisher = {Springer New York},
+	author = {Hastie, Trevor and Tibshirani, Robert and Friedman, Jerome},
+	year = {2009},
+	doi = {10.1007/978-0-387-84858-7},
+}
+
+@book{gareth_james_introduction_2013,
+	address = {New York, NY},
+	series = {Springer {Texts} in {Statistics}},
+	title = {An {Introduction} to {Statistical} {Learning}},
+	volume = {103},
+	copyright = {http://www.springer.com/tdm},
+	isbn = {978-1-4614-7137-0 978-1-4614-7138-7},
+	url = {http://link.springer.com/10.1007/978-1-4614-7138-7},
+	urldate = {2026-02-26},
+	publisher = {Springer New York},
+	author = {{Gareth James} and Witten, Daniela and Hastie, Trevor and Tibshirani, Robert},
+	year = {2013},
+	doi = {10.1007/978-1-4614-7138-7},
+}
+
+@misc{openai_chatgpt_2026,
+  author = {{OpenAI}},
+  title  = {ChatGPT (GPT-5.2 Thinking)},
+  year   = {2026},
+  url    = {https://chat.openai.com/},
+  note   = {Accessed 2026-02-25}
+}
+```
+> **Note:** The figures produced in this R Markdown document are preliminary drafts for illustrating patterns and verifying results. They do not represent the final figures.
