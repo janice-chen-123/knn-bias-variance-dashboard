@@ -4,6 +4,7 @@
 #' @importFrom rlang .data
 NULL
 
+# Sort 2D grid values before plotting
 order_surface_df <- function(df) {
   df[order(df$x2, df$x1), , drop = FALSE]
 }
@@ -128,6 +129,7 @@ make_grid <- function(grid_size = 101, d = 1) {
 }
 
 #' Monte Carlo Bias-Variance decomposition for k-NN
+# Short summary: estimate bias, variance, and MSE on the grid
 #' @export
 mc_knn_decomp <- function(n = 200,
                           k = 10,
@@ -180,6 +182,7 @@ mc_knn_decomp <- function(n = 200,
   )
 }
 
+# Compute average MSE over a sequence of k values
 #' @export
 mc_knn_curve <- function(k_values,
                          n = 200,
@@ -211,6 +214,7 @@ mc_knn_curve <- function(k_values,
   do.call(rbind, out)
 }
 
+# Plot 1D pointwise error components
 #' @export
 plot_mse_1d <- function(res,
                         show = c("bias2", "variance", "mse_y"),
@@ -249,6 +253,7 @@ plot_mse_1d <- function(res,
   p
 }
 
+# Compute average bias, variance, and MSE across k
 #' @export
 mc_knn_curve_components <- function(k_values,
                                     n = 200,
@@ -283,6 +288,7 @@ mc_knn_curve_components <- function(k_values,
   do.call(rbind, out)
 }
 
+# Plot bias-variance tradeoff curves
 #' @export
 plot_curve_components <- function(curve_df,
                                   show = c("avg_bias2", "avg_variance", "avg_mse_y"),
@@ -315,6 +321,7 @@ plot_curve_components <- function(curve_df,
   p
 }
 
+# Simulate one fitted k-NN model
 simulate_one_fit <- function(n = 200,
                              k = 10,
                              sigma = 0.2,
@@ -356,6 +363,7 @@ simulate_one_fit <- function(n = 200,
   )
 }
 
+# Compare Monte Carlo MSE with theoretical MSE
 mc_knn_compare_curve <- function(k_values,
                                  n = 200,
                                  B = 500,
@@ -403,6 +411,7 @@ mc_knn_compare_curve <- function(k_values,
   do.call(rbind, out)
 }
 
+# Plot 1D fit against the true function
 plot_fit_vs_truth_1d <- function(res,
                                  truth_col = "black",
                                  est_col = "red",
@@ -434,6 +443,7 @@ plot_fit_vs_truth_1d <- function(res,
     ggplot2::theme(legend.position = "top")
 }
 
+# Plot true and estimated surfaces in 2D
 plot_fit_vs_truth_2d <- function(res) {
   if (res$settings$d != 2) stop("plot_fit_vs_truth_2d() requires d = 2.")
 
@@ -476,6 +486,7 @@ plot_fit_vs_truth_2d <- function(res) {
     )
 }
 
+# Plot one 2D error surface
 plot_mse_surface_2d <- function(res, component = c("bias2", "variance", "mse_y")) {
   component <- match.arg(component)
   if (res$settings$d != 2) stop("plot_mse_surface_2d() requires d = 2.")
@@ -500,6 +511,7 @@ plot_mse_surface_2d <- function(res, component = c("bias2", "variance", "mse_y")
     )
 }
 
+# Plot Monte Carlo and theoretical MSE curves
 plot_mse_compare_curve <- function(compare_df,
                                    mc_col = "steelblue",
                                    true_col = "firebrick") {
