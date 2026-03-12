@@ -106,7 +106,7 @@ knn_predict <- function(x_train, y_train, x_test, k) {
   preds
 }
 
-#' Create evaluation grid on [0,1]^d
+#' Create evaluation grid on \eqn{[0,1]^d}
 #'
 #' @param grid_size Integer.
 #' @param d Dimension (1 or 2).
@@ -129,7 +129,19 @@ make_grid <- function(grid_size = 101, d = 1) {
 }
 
 #' Monte Carlo Bias-Variance decomposition for k-NN
-# Short summary: estimate bias, variance, and MSE on the grid
+#'
+#' Estimate bias, variance, and MSE of k-NN predictions on a grid using Monte Carlo simulation.
+#'
+#' @param n Training sample size.
+#' @param k Number of neighbors.
+#' @param B Number of Monte Carlo repetitions.
+#' @param sigma Noise standard deviation.
+#' @param d Dimension (1 or 2).
+#' @param type "1d" or "2d".
+#' @param grid_size Number of grid points per axis.
+#' @param seed Optional random seed.
+#'
+#' @return A list containing simulation settings, grid axis, and pointwise results.
 #' @export
 mc_knn_decomp <- function(n = 200,
                           k = 10,
@@ -183,7 +195,7 @@ mc_knn_decomp <- function(n = 200,
 }
 
 # Compute average MSE over a sequence of k values
-#' @export
+#' @noRd
 mc_knn_curve <- function(k_values,
                          n = 200,
                          B = 500,
@@ -215,7 +227,7 @@ mc_knn_curve <- function(k_values,
 }
 
 # Plot 1D pointwise error components
-#' @export
+#' @noRd
 plot_mse_1d <- function(res,
                         show = c("bias2", "variance", "mse_y"),
                         colors = NULL) {
@@ -254,7 +266,7 @@ plot_mse_1d <- function(res,
 }
 
 # Compute average bias, variance, and MSE across k
-#' @export
+#' @noRd
 mc_knn_curve_components <- function(k_values,
                                     n = 200,
                                     B = 500,
@@ -289,7 +301,7 @@ mc_knn_curve_components <- function(k_values,
 }
 
 # Plot bias-variance tradeoff curves
-#' @export
+#' @noRd
 plot_curve_components <- function(curve_df,
                                   show = c("avg_bias2", "avg_variance", "avg_mse_y"),
                                   colors = NULL) {
