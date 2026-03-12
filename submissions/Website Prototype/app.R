@@ -89,3 +89,112 @@ ui <- fluidPage(
   )
 )
 
+
+server <- function(input, output, session) {
+  
+  observe({
+    
+    # keep k <= n
+    updateSliderInput(
+      session, "k",
+      max = input$n,
+      value = min(input$k, input$n)
+    )
+    
+    updateNumericInput(
+      session, "kmax",
+      max = input$n,
+      value = min(input$kmax, input$n)
+    )
+    
+  })
+  
+  # collect parameters when the simulation is run
+  app_params <- eventReactive(input$run, {
+    
+    list(
+      seed = input$seed,
+      d = ifelse(input$dimension == "1d", 1, 2),
+      type = input$dimension,
+      n = input$n,
+      k = input$k,
+      sigma = input$sigma,
+      B = input$B,
+      grid_size = input$grid_size,
+      kmax = min(input$kmax, input$n)
+    )
+    
+  })
+  
+  # single simulation fit
+  fit_res <- eventReactive(input$run, {
+    
+    p <- app_params()
+    
+    simulate_one_fit(
+      n = p$n,
+      k = p$k,
+      sigma = p$sigma,
+      d = p$d,
+      type = p$type,
+      grid_size = p$grid_size,
+      seed = p$seed
+    )
+    
+  })
+  
+  # bias-variance decomposition
+  decomp_res <- eventReactive(input$run, {
+    
+    p <- app_params()
+    
+    mc_knn_decomp(
+      n = p$n,
+      k = p$k,
+      B = p$B,
+      sigma = p$sigma,
+      d = p$d,
+      type = p$type,
+      grid_size = p$grid_size,
+      seed = p$seed
+    )
+    
+  })
+  
+  # bias, variance and mse curves across k
+  curve_res <- eventReactive(input$run, {
+    
+    p <- app_params()
+    
+    mc_knn_curve_components(
+      k_values = 1:p$kmax,
+      n = p$n,
+      B = p$B,
+      sigma = p$sigma,
+      d = p$d,
+      type = p$type,
+      grid_size = p$grid_size,
+      seed = p$seed
+    )
+    
+  })
+  
+  compare_res <- eventReactive(input$run, {
+    
+    p <- app_params()
+    
+    mc_knn_compare_curve(
+      k_values = 1:p$kmax,
+      n = p$n,
+      B = p$B,
+      sigma = p$sigma,
+      d = p$d,
+      type = p$type,
+      grid_size = p$grid_size,
+      seed = p$seed
+    )
+    
+  })
+  
+  
+  
