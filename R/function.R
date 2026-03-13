@@ -3,35 +3,32 @@
 #' @importFrom ggplot2 ggplot aes geom_line geom_point labs theme_minimal scale_shape_manual theme
 #' @importFrom rlang .data
 NULL
-
-# Sort 2D grid values before plotting
-order_surface_df <- function(df) {
-  df[order(df$x2, df$x1), , drop = FALSE]
-}
-
 #' Generate covariates X from the DGP
 #'
-#' Draws covariates according to X ~ Unif(0,1)^d.
+#' Draws covariates according to \eqn{X \sim \mathrm{Unif}(0,1)^d}.
 #'
 #' @param n Integer. Training sample size.
 #' @param d Integer. Dimension (1 or 2).
 #' @param seed Optional integer. If provided, sets the random seed.
 #'
-#' @return A numeric matrix with n rows and d columns.
+#' @return A numeric matrix with \code{n} rows and \code{d} columns.
 #' @export
 dgp_x <- function(n, d = 1, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
   matrix(runif(n * d), nrow = n, ncol = d)
 }
 
+
 #' Deterministic target function f(x)
 #'
 #' Two options:
-#'   "1d": f(x) = sin(2*pi*x)
-#'   "2d": f(x1,x2) = sin(pi*x1) * cos(pi*x2)
+#' \itemize{
+#'   \item \code{"1d"}: \eqn{f(x) = \sin(2\pi x)}
+#'   \item \code{"2d"}: \eqn{f(x_1,x_2) = \sin(\sqrt{x_1^2 + x_2^2})}
+#' }
 #'
 #' @param x Numeric vector (1d) or matrix with 2 columns (2d).
-#' @param type Character. One of "1d" or "2d".
+#' @param type Character. One of \code{"1d"} or \code{"2d"}.
 #'
 #' @return Numeric vector.
 #' @export
@@ -45,16 +42,19 @@ dgp_f <- function(x, type = c("1d", "2d")) {
 
   x <- as.matrix(x)
   if (ncol(x) != 2) stop("For type='2d', x must have exactly 2 columns.")
-  sin(pi * x[, 1]) * cos(pi * x[, 2])
+  r <- sqrt(x[, 1]^2 + x[, 2]^2)
+  sin(r)
 }
+
 
 #' Generate responses Y from the DGP
 #'
-#' Generates Y = f(X) + eps, where eps ~ N(0, sigma^2).
+#' Generates \eqn{Y = f(X) + \varepsilon},
+#' where \eqn{\varepsilon \sim \mathcal{N}(0,\sigma^2)}.
 #'
 #' @param x Numeric matrix of covariates.
 #' @param sigma Noise standard deviation.
-#' @param type "1d" or "2d".
+#' @param type \code{"1d"} or \code{"2d"}.
 #' @param seed Optional integer.
 #'
 #' @return Numeric vector.
@@ -68,7 +68,10 @@ dgp_y <- function(x, sigma, type = c("1d", "2d"), seed = NULL) {
   mu + rnorm(nrow(x), mean = 0, sd = sigma)
 }
 
+
 #' k-NN regression prediction
+#'
+#' Computes k-nearest neighbors regression predictions.
 #'
 #' @param x_train Numeric matrix (n x d).
 #' @param y_train Numeric vector (length n).
@@ -78,17 +81,14 @@ dgp_y <- function(x, sigma, type = c("1d", "2d"), seed = NULL) {
 #' @return Numeric vector of length m.
 #' @export
 knn_predict <- function(x_train, y_train, x_test, k) {
+
   x_train <- as.matrix(x_train)
   y_train <- as.numeric(y_train)
 
-  if (is.null(dim(x_test))) {
+  if (is.vector(x_test)) {
     x_test <- matrix(as.numeric(x_test), ncol = ncol(x_train))
   } else {
     x_test <- as.matrix(x_test)
-  }
-
-  if (ncol(x_test) != ncol(x_train)) {
-    stop("x_test and x_train must have the same number of columns.")
   }
 
   n <- nrow(x_train)
@@ -106,6 +106,7 @@ knn_predict <- function(x_train, y_train, x_test, k) {
   preds
 }
 
+
 #' Create evaluation grid on \eqn{[0,1]^d}
 #'
 #' @param grid_size Integer.
@@ -114,6 +115,7 @@ knn_predict <- function(x_train, y_train, x_test, k) {
 #' @return List with x_grid and axis.
 #' @export
 make_grid <- function(grid_size = 101, d = 1) {
+
   axis <- seq(0, 1, length.out = grid_size)
 
   if (d == 1) {
@@ -121,27 +123,26 @@ make_grid <- function(grid_size = 101, d = 1) {
   }
 
   if (d == 2) {
-    gg <- expand.grid(x1 = axis, x2 = axis)
+    gg <- expand.grid(axis, axis)
     return(list(x_grid = as.matrix(gg), axis = axis))
   }
 
   stop("Only d = 1 or 2 supported.")
 }
 
+
 #' Monte Carlo Bias-Variance decomposition for k-NN
-#'
-#' Estimate bias, variance, and MSE of k-NN predictions on a grid using Monte Carlo simulation.
 #'
 #' @param n Training sample size.
 #' @param k Number of neighbors.
-#' @param B Number of Monte Carlo repetitions.
-#' @param sigma Noise standard deviation.
-#' @param d Dimension (1 or 2).
-#' @param type "1d" or "2d".
-#' @param grid_size Number of grid points per axis.
-#' @param seed Optional random seed.
+#' @param B Monte Carlo repetitions.
+#' @param sigma Noise sd.
+#' @param d Dimension.
+#' @param type Target function.
+#' @param grid_size Grid resolution.
+#' @param seed Optional integer.
 #'
-#' @return A list containing simulation settings, grid axis, and pointwise results.
+#' @return List with settings, grid_axis, and pointwise data frame.
 #' @export
 mc_knn_decomp <- function(n = 200,
                           k = 10,
@@ -151,6 +152,7 @@ mc_knn_decomp <- function(n = 200,
                           type = c("1d", "2d"),
                           grid_size = 101,
                           seed = NULL) {
+
   type <- match.arg(type)
   if (!is.null(seed)) set.seed(seed)
 
@@ -194,8 +196,22 @@ mc_knn_decomp <- function(n = 200,
   )
 }
 
-# Compute average MSE over a sequence of k values
-#' @noRd
+
+#' Compute average MSE curve across k values
+#'
+#' @param k_values Integer vector of candidate k values.
+#' @param n Training sample size.
+#' @param B Monte Carlo repetitions.
+#' @param sigma Noise standard deviation.
+#' @param d Dimension (1 or 2).
+#' @param type Target function ("1d" or "2d").
+#' @param grid_size Grid resolution.
+#' @param seed Optional integer for reproducibility.
+#' @param target Character: "y" to minimize MSE_Y,
+#'               "f" to minimize MSE_f.
+#'
+#' @return Data frame with columns k and avg_mse.
+#' @export
 mc_knn_curve <- function(k_values,
                          n = 200,
                          B = 500,
@@ -205,10 +221,12 @@ mc_knn_curve <- function(k_values,
                          grid_size = 101,
                          seed = NULL,
                          target = c("y", "f")) {
+
   type <- match.arg(type)
   target <- match.arg(target)
 
   out <- lapply(seq_along(k_values), function(i) {
+
     k <- k_values[i]
 
     res <- mc_knn_decomp(
@@ -226,11 +244,19 @@ mc_knn_curve <- function(k_values,
   do.call(rbind, out)
 }
 
-# Plot 1D pointwise error components
-#' @noRd
+
+#' Plot MSE decomposition (1d) using ggplot2
+#'
+#' @param res Output of mc_knn_decomp() with d = 1.
+#' @param show Character vector of components.
+#' @param colors Optional vector of colors for the plotted components.
+#'
+#' @return ggplot object.
+#' @export
 plot_mse_1d <- function(res,
                         show = c("bias2", "variance", "mse_y"),
                         colors = NULL) {
+
   if (res$settings$d != 1) stop("plot_mse_1d() requires d = 1.")
 
   pw <- res$pointwise
@@ -261,12 +287,31 @@ plot_mse_1d <- function(res,
     ) +
     ggplot2::theme(legend.position = "top")
 
-  if (!is.null(colors)) p <- p + ggplot2::scale_color_manual(values = colors)
+  if (!is.null(colors)) {
+    p <- p + ggplot2::scale_color_manual(values = colors)
+  }
+
   p
 }
 
-# Compute average bias, variance, and MSE across k
-#' @noRd
+#' Compute average Bias^2 / Variance / MSE components across k values
+#'
+#' This is a convenience wrapper around \code{mc_knn_decomp()} that returns
+#' the **grid-averaged** components for each candidate \code{k}. It's useful
+#' for making the classic bias-variance tradeoff plot versus \code{k}.
+#'
+#' @param k_values Integer vector of candidate k values.
+#' @param n Training sample size.
+#' @param B Monte Carlo repetitions.
+#' @param sigma Noise standard deviation.
+#' @param d Dimension (1 or 2).
+#' @param type Target function ("1d" or "2d").
+#' @param grid_size Grid resolution.
+#' @param seed Optional integer for reproducibility.
+#'
+#' @return Data frame with one row per k and columns:
+#'   \code{k}, \code{avg_bias2}, \code{avg_variance}, \code{avg_mse_f}, \code{avg_mse_y}.
+#' @export
 mc_knn_curve_components <- function(k_values,
                                     n = 200,
                                     B = 500,
@@ -275,9 +320,11 @@ mc_knn_curve_components <- function(k_values,
                                     type = c("1d", "2d"),
                                     grid_size = 101,
                                     seed = NULL) {
+
   type <- match.arg(type)
 
   out <- lapply(seq_along(k_values), function(i) {
+
     k <- k_values[i]
 
     res <- mc_knn_decomp(
@@ -300,22 +347,41 @@ mc_knn_curve_components <- function(k_values,
   do.call(rbind, out)
 }
 
-# Plot bias-variance tradeoff curves
-#' @noRd
+
+#' Plot bias-variance tradeoff vs k using ggplot2
+#'
+#' @param curve_df Output of \code{mc_knn_curve_components()}.
+#' @param show Character vector of components to plot.
+#' @param colors Optional vector of colors for the plotted components.
+#'
+#' @return ggplot object.
+#' @export
 plot_curve_components <- function(curve_df,
                                   show = c("avg_bias2", "avg_variance", "avg_mse_y"),
                                   colors = NULL) {
+
   needed <- c("k", show)
   if (!all(needed %in% names(curve_df))) {
     stop("curve_df must contain columns: ", paste(needed, collapse = ", "))
   }
 
   df <- curve_df[, needed, drop = FALSE]
-  df_long <- tidyr::pivot_longer(df, cols = -k, names_to = "component", values_to = "value")
+
+  df_long <- tidyr::pivot_longer(
+    df,
+    cols = -k,
+    names_to = "component",
+    values_to = "value"
+  )
 
   p <- ggplot2::ggplot(
     df_long,
-    ggplot2::aes(x = .data$k, y = .data$value, color = .data$component, shape = .data$component)
+    ggplot2::aes(
+      x = .data$k,
+      y = .data$value,
+      color = .data$component,
+      shape = .data$component
+    )
   ) +
     ggplot2::geom_line(linewidth = 1) +
     ggplot2::geom_point(size = 2.5) +
@@ -329,11 +395,18 @@ plot_curve_components <- function(curve_df,
     ) +
     ggplot2::theme(legend.position = "top")
 
-  if (!is.null(colors)) p <- p + ggplot2::scale_color_manual(values = colors)
+  if (!is.null(colors)) {
+    p <- p + ggplot2::scale_color_manual(values = colors)
+  }
+
   p
 }
 
-# Simulate one fitted k-NN model
+
+#下边是我新加的
+
+# Single fit simulation
+
 simulate_one_fit <- function(n = 200,
                              k = 10,
                              sigma = 0.2,
@@ -341,6 +414,7 @@ simulate_one_fit <- function(n = 200,
                              type = c("1d", "2d"),
                              grid_size = 101,
                              seed = NULL) {
+
   type <- match.arg(type)
   if (!is.null(seed)) set.seed(seed)
 
@@ -350,7 +424,12 @@ simulate_one_fit <- function(n = 200,
   grid <- make_grid(grid_size = grid_size, d = d)
   x_grid <- grid$x_grid
 
-  f_true <- if (d == 1) dgp_f(x_grid[, 1], type = type) else dgp_f(x_grid, type = type)
+  f_true <- if (d == 1) {
+    dgp_f(x_grid[, 1], type = type)
+  } else {
+    dgp_f(x_grid, type = type)
+  }
+
   f_hat <- knn_predict(x_train, y_train, x_grid, k = k)
 
   fit <- data.frame(
@@ -367,15 +446,18 @@ simulate_one_fit <- function(n = 200,
   )
 
   list(
-    settings = list(n = n, k = k, sigma = sigma, d = d,
-                    type = type, grid_size = grid_size, seed = seed),
+    settings = list(
+      n = n, k = k, sigma = sigma, d = d,
+      type = type, grid_size = grid_size, seed = seed
+    ),
     grid_axis = grid$axis,
     fit = fit,
     train = train
   )
 }
 
-# Compare Monte Carlo MSE with theoretical MSE
+# Monte Carlo MSE vs theoretical MSE
+
 mc_knn_compare_curve <- function(k_values,
                                  n = 200,
                                  B = 500,
@@ -384,15 +466,22 @@ mc_knn_compare_curve <- function(k_values,
                                  type = c("1d", "2d"),
                                  grid_size = 101,
                                  seed = NULL) {
+
   type <- match.arg(type)
   if (!is.null(seed)) set.seed(seed)
 
   grid <- make_grid(grid_size = grid_size, d = d)
   x_grid <- grid$x_grid
-  f_true <- if (d == 1) dgp_f(x_grid[, 1], type = type) else dgp_f(x_grid, type = type)
+
+  f_true <- if (d == 1) {
+    dgp_f(x_grid[, 1], type = type)
+  } else {
+    dgp_f(x_grid, type = type)
+  }
 
   out <- lapply(seq_along(k_values), function(i) {
     k <- k_values[i]
+
     preds <- matrix(NA_real_, nrow = B, ncol = nrow(x_grid))
     mc_mse_each <- numeric(B)
 
@@ -423,11 +512,13 @@ mc_knn_compare_curve <- function(k_values,
   do.call(rbind, out)
 }
 
-# Plot 1D fit against the true function
+# Plot 1D fit vs truth
+
 plot_fit_vs_truth_1d <- function(res,
                                  truth_col = "black",
                                  est_col = "red",
                                  point_col = "grey40") {
+
   if (res$settings$d != 1) stop("plot_fit_vs_truth_1d() requires d = 1.")
 
   fit_df <- res$fit
@@ -449,17 +540,25 @@ plot_fit_vs_truth_1d <- function(res,
       ggplot2::aes(x = .data$x1, y = .data$f_hat, color = "Estimated fhat(x)"),
       linewidth = 1.2
     ) +
-    ggplot2::scale_color_manual(values = c("True f(x)" = truth_col, "Estimated fhat(x)" = est_col)) +
+    ggplot2::scale_color_manual(
+      values = c("True f(x)" = truth_col, "Estimated fhat(x)" = est_col)
+    ) +
     ggplot2::theme_minimal(base_size = 14) +
-    ggplot2::labs(title = "k-NN fit versus true function", x = "x", y = "Function value", color = NULL) +
+    ggplot2::labs(
+      title = "k-NN fit versus true function",
+      x = "x",
+      y = "Function value",
+      color = NULL
+    ) +
     ggplot2::theme(legend.position = "top")
 }
 
-# Plot true and estimated surfaces in 2D
+# Plot 2D fit vs truth
+
 plot_fit_vs_truth_2d <- function(res) {
   if (res$settings$d != 2) stop("plot_fit_vs_truth_2d() requires d = 2.")
 
-  fit_df <- order_surface_df(res$fit)
+  fit_df <- res$fit
 
   long_df <- tidyr::pivot_longer(
     fit_df[, c("x1", "x2", "f_true", "f_hat")],
@@ -475,21 +574,16 @@ plot_fit_vs_truth_2d <- function(res) {
   )
 
   ggplot2::ggplot(long_df, ggplot2::aes(x = x1, y = x2, fill = value)) +
-    ggplot2::geom_tile() +
+    ggplot2::geom_raster() +
     ggplot2::coord_fixed() +
     ggplot2::facet_wrap(~ surface) +
     ggplot2::scale_fill_gradient2(
-      low = "#2166AC",
-      mid = "#F7F7F7",
-      high = "#B2182B",
+      low = "navy",
+      mid = "white",
+      high = "firebrick",
       midpoint = 0
     ) +
     ggplot2::theme_minimal(base_size = 14) +
-    ggplot2::theme(
-      panel.grid = ggplot2::element_blank(),
-      strip.text = ggplot2::element_text(face = "bold"),
-      plot.title = ggplot2::element_text(face = "bold")
-    ) +
     ggplot2::labs(
       title = "True surface vs estimated surface",
       x = "x1",
@@ -498,23 +592,21 @@ plot_fit_vs_truth_2d <- function(res) {
     )
 }
 
-# Plot one 2D error surface
+# Plot 2d MSE surface
+
 plot_mse_surface_2d <- function(res, component = c("bias2", "variance", "mse_y")) {
   component <- match.arg(component)
+
   if (res$settings$d != 2) stop("plot_mse_surface_2d() requires d = 2.")
 
-  pw <- order_surface_df(res$pointwise)
+  pw <- res$pointwise
   pw$z <- pw[[component]]
 
   ggplot2::ggplot(pw, ggplot2::aes(x = x1, y = x2, fill = z)) +
-    ggplot2::geom_tile() +
+    ggplot2::geom_raster() +
     ggplot2::coord_fixed() +
-    ggplot2::scale_fill_gradient(low = "#F7FBFF", high = "#08306B") +
+    ggplot2::scale_fill_gradient(low = "white", high = "firebrick") +
     ggplot2::theme_minimal(base_size = 14) +
-    ggplot2::theme(
-      panel.grid = ggplot2::element_blank(),
-      plot.title = ggplot2::element_text(face = "bold")
-    ) +
     ggplot2::labs(
       title = paste("2D surface of", component),
       x = "x1",
@@ -523,10 +615,12 @@ plot_mse_surface_2d <- function(res, component = c("bias2", "variance", "mse_y")
     )
 }
 
-# Plot Monte Carlo and theoretical MSE curves
+# Plot Monte Carlo vs theoretical MSE
+
 plot_mse_compare_curve <- function(compare_df,
                                    mc_col = "steelblue",
                                    true_col = "firebrick") {
+
   needed <- c("k", "monte_carlo_mse", "theoretical_mse")
   if (!all(needed %in% names(compare_df))) {
     stop("compare_df must contain columns: k, monte_carlo_mse, theoretical_mse")
@@ -546,8 +640,14 @@ plot_mse_compare_curve <- function(compare_df,
     ggplot2::geom_line(linewidth = 1) +
     ggplot2::geom_point(size = 2.5) +
     ggplot2::scale_color_manual(
-      values = c("monte_carlo_mse" = mc_col, "theoretical_mse" = true_col),
-      labels = c("monte_carlo_mse" = "Monte Carlo MSE", "theoretical_mse" = "Theoretical MSE")
+      values = c(
+        "monte_carlo_mse" = mc_col,
+        "theoretical_mse" = true_col
+      ),
+      labels = c(
+        "monte_carlo_mse" = "Monte Carlo MSE",
+        "theoretical_mse" = "Theoretical MSE"
+      )
     ) +
     ggplot2::theme_minimal(base_size = 14) +
     ggplot2::labs(

@@ -71,15 +71,23 @@ ui <- fluidPage(
 
     mainPanel(
       width = 8,
-      tabsetPanel(
-        tabPanel("Fit vs Truth", plotOutput("fit_plot", height = "520px")),
-        tabPanel("Bias-Variance Decomposition", plotOutput("decomp_plot", height = "520px")),
-        tabPanel("Tradeoff by k", plotOutput("tradeoff_plot", height = "520px")),
-        tabPanel("MC MSE vs True MSE", plotOutput("compare_plot", height = "520px"))
-      ),
-      br(),
-      tags$h4("Summary"),
-      verbatimTextOutput("summary_text")
+      div(
+        style = "display: flex; flex-direction: column; min-height: 878px;",
+        
+        tabsetPanel(
+          tabPanel("Fit vs Truth", plotOutput("fit_plot", height = "520px")),
+          tabPanel("Bias-Variance Decomposition", plotOutput("decomp_plot", height = "520px")),
+          tabPanel("Tradeoff by k", plotOutput("tradeoff_plot", height = "520px")),
+          tabPanel("MC MSE vs True MSE", plotOutput("compare_plot", height = "520px"))
+        ),
+        
+        div(
+          style = "margin-top: auto;",
+          br(),
+          tags$h4("Summary"),
+          verbatimTextOutput("summary_text")
+        )
+      )
     )
   )
 )
