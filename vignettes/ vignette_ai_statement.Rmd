@@ -6,3 +6,13 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
+## Generative AI Usage Statement
+
+In the Website Prototype, the parts where generative AI was used are:
+
+- assisting with debugging errors in the 2D simulation implementation, including cases where 2D plotting functions (such as `plot_fit_vs_truth_2d()` and `plot_mse_surface_2d()`) were triggered under incompatible dimension settings and produced errors requiring `d = 2`,
+- suggesting adjustments to the Shiny UI layout, aligning the console output and summary panels.
+
+Generative AI was used only as a troubleshooting and coding assistant. The overall project design, Monte Carlo simulation framework, statistical methodology, interpretation of results, and final implementation decisions were completed by the group members.
+
+All generated suggestions were reviewed, tested, and modified by the group members before inclusion in the final project.
