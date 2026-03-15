@@ -1,0 +1,23 @@
+I think you should use shinycssloaders to make it clear that some of the apps may take a bit to run and that we're still waiting for progress to load.
+
+I'm not too sure if the Summary part is working? I've noticed some of the output is blank:
+
+Dimension: 1D
+Seed: 380
+n = 120 , k = 10 , sigma = 0.2 , B = 80
+Grid size = 41 , max k = 20
+
+Best k by Monte Carlo MSE: 
+Best k by Theoretical MSE: 
+Best k by averaged tradeoff curve: 
+
+I generally do like the plots. What I think would be better if you were to
+1. actually add latex to your plot labels (instead of just fhat(x), it should be formatted properly)
+and inputs (instead of just sigma, actually do the LaTeX sigma)
+2. remove underscores from plot names (I am good with underscores when it comes to things like vignettes, but if you're writing plot names then it's better to have "Average Bias" instead of "avg_bias2".
+
+I'm not too sure if there is 2D support at the moment (I tried to get it to run; nothing really popped up after waiting for a few minutes.) Again, might be better if there were some loaders to help with this.
+
+I think to help out, since this is a simulation, is to have another page: a good extra description of what the model is exactly and which parameters you are exactly trying to edit or adjust of a given model.
+
+I'm not too concerned regarding individual contributions; it appears to me that all members have sufficiently contributed to the project.
