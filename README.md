@@ -3,7 +3,7 @@
 ## Shiny App
 Our Shiny website is available here:
 
-https://connect.posit.cloud/janice-chen-123/content/019ce7b4-9ea2-6114-47b2-89c584870684
+[https://connect.posit.cloud/janice-chen-123/content/019ce7b4-9ea2-6114-47b2-89c584870684](https://janice-chen-123-sta380-yesoryes.share.connect.posit.cloud)
 
 ## Repository Structure
 - `shiny-app/`: source code for the Shiny website
