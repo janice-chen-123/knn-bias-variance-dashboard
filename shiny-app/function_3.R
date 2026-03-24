@@ -33,10 +33,10 @@ safe_TeX <- function(x) {
 
 .component_title_map <- function() {
   c(
-    bias2 = "2D surface of Bias^2",
-    variance = "2D surface of Variance",
-    mse_f = "2D surface of estimation MSE",
-    mse_y = "2D surface of response MSE"
+    bias2 = "Bias^2 shown as a 3D surface",
+    variance = "Variance shown as a 3D surface",
+    mse_f = "Estimation MSE shown as a 3D surface",
+    mse_y = "Response MSE shown as a 3D surface"
   )
 }
 
@@ -570,4 +570,85 @@ plot_mse_compare_curve <- function(compare_df,
       shape = NULL
     ) +
     ggplot2::theme(legend.position = "top")
+}
+
+surface_matrix <- function(df, value_col) {
+  df <- order_surface_df(df)
+  x_vals <- sort(unique(df$x1))
+  y_vals <- sort(unique(df$x2))
+  z_mat <- matrix(df[[value_col]], nrow = length(y_vals), ncol = length(x_vals), byrow = TRUE)
+  list(x = x_vals, y = y_vals, z = z_mat)
+}
+
+plot_fit_vs_truth_3d <- function(res) {
+  if (res$settings$d != 2) stop("plot_fit_vs_truth_3d() requires d = 2.")
+  if (!requireNamespace("plotly", quietly = TRUE)) stop("Package 'plotly' is required for 3D plots.")
+
+  surf_true <- surface_matrix(res$fit, "f_true")
+  surf_hat  <- surface_matrix(res$fit, "f_hat")
+
+  p_true <- plotly::plot_ly(
+    x = surf_true$x,
+    y = surf_true$y,
+    z = surf_true$z,
+    type = "surface",
+    colorscale = "Blues",
+    showscale = FALSE
+  ) |> plotly::layout(
+    title = list(text = "True function shown as a 3D surface"),
+    scene = list(
+      xaxis = list(title = "Input 1"),
+      yaxis = list(title = "Input 2"),
+      zaxis = list(title = "True Function value")
+    )
+  )
+
+  p_hat <- plotly::plot_ly(
+    x = surf_hat$x,
+    y = surf_hat$y,
+    z = surf_hat$z,
+    type = "surface",
+    colorscale = "Blues",
+    showscale = TRUE
+  ) |> plotly::layout(
+    title = list(text = "Estimated k-NN function shown as a 3D surface"),
+    scene = list(
+      xaxis = list(title = "Input 1"),
+      yaxis = list(title = "Input 2"),
+      zaxis = list(title = "Estimated function value")
+    )
+  )
+
+  plotly::subplot(p_true, p_hat, nrows = 1, titleX = TRUE, titleY = TRUE, margin = 0.05)
+}
+
+plot_mse_surface_3d <- function(res, component = c("bias2", "variance", "mse_y")) {
+  component <- match.arg(component)
+  if (res$settings$d != 2) stop("plot_mse_surface_3d() requires d = 2.")
+  if (!requireNamespace("plotly", quietly = TRUE)) stop("Package 'plotly' is required for 3D plots.")
+  
+  pw <- order_surface_df(res$pointwise)
+  surf <- surface_matrix(pw, component)
+  ttl <- .component_title_map()
+  zlab <- c(
+    bias2 = "Bias^2",
+    variance = "Variance",
+    mse_f = "Estimation MSE",
+    mse_y = "Response MSE"
+  )
+  
+  plotly::plot_ly(
+    x = surf$x,
+    y = surf$y,
+    z = surf$z,
+    type = "surface",
+    colorscale = "Viridis"
+  ) |> plotly::layout(
+    title = list(text = unname(ttl[component])),
+    scene = list(
+      xaxis = list(title = "Input 1"),
+      yaxis = list(title = "Input 2"),
+      zaxis = list(title = unname(zlab[component]))
+    )
+  )
 }

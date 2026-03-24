@@ -3,6 +3,7 @@ library(ggplot2)
 library(tidyr)
 library(rlang)
 library(shinycssloaders)
+library(plotly)
 
 source("function_3.R")
 
@@ -35,7 +36,7 @@ ui <- fluidPage(
             br(),
             div(class = "subsection-title", "Core settings"),
             numericInput("seed", "Random seed", value = 380, min = 1, step = 1),
-            radioButtons("dimension", "Dimension", choices = c("1D" = "1d", "2D" = "2d"), selected = "1d"),
+            radioButtons("dimension", "Input Dimension", choices = c("1D" = "1d", "2D" = "2d"), selected = "1d"),
             numericInput("n", HTML("Training sample size \\(n\\)"), value = 120, min = 30, max = 400, step = 10),
             numericInput("B", HTML("Monte Carlo repetitions \\(B\\)"), value = 80, min = 20, max = 500, step = 10),
             
@@ -48,7 +49,7 @@ ui <- fluidPage(
             sliderInput("kmax", HTML("Maximum \\(k\\) for curve plots"), min = 5, max = 30, value = 20, step = 1),
             
             p(class = "note-text",
-              "For 2D simulations, smaller defaults are recommended because surface plots and repeated Monte Carlo calculations may take longer to compute."
+              "For 2D settings, 3D surface plots and repeated Monte Carlo calculations may take longer to render."
             ),
             actionButton("run", "Run Simulation", class = "btn-primary")
           ),
@@ -72,8 +73,8 @@ ui <- fluidPage(
       div(
         class = "plot-box",
         tabsetPanel(
-          tabPanel("Model Fit", withSpinner(plotOutput("fit_plot", height = "520px"), type = 6)),
-          tabPanel("Bias-Variance Breakdown", withSpinner(plotOutput("decomp_plot", height = "520px"), type = 6)),
+          tabPanel("Model Fit", withSpinner(uiOutput("fit_plot_ui"), type = 6)),
+          tabPanel("Bias-Variance Breakdown", withSpinner(uiOutput("decomp_plot_ui"), type = 6)),
           tabPanel("k Selection", withSpinner(plotOutput("tradeoff_plot", height = "520px"), type = 6)),
           tabPanel("MSE Comparison", withSpinner(plotOutput("compare_plot", height = "520px"), type = 6)),
           tabPanel(
@@ -83,7 +84,7 @@ ui <- fluidPage(
               tags$h4("Model description"),
               tags$p("The app studies repeated-sample behavior of k-nearest neighbors regression."),
               tags$p("In one dimension, the target regression function is ", HTML("\\(f(x) = \\sin(2\\pi x)\\).")),
-              tags$p("In two dimensions, the target surface is ", HTML("\\(f(x_1, x_2) = \\sin(\\pi x_1) \\cos(\\pi x_2)\\).")),
+              tags$p("In the 2D setting, the target surface is ", HTML("\\(f(x_1, x_2) = \\sin(\\pi x_1) \\cos(\\pi x_2)\\), displayed as a 3D surface for visual comparison.")),
               tags$ul(
                 tags$li(HTML("\\(n\\): number of training observations")),
                 tags$li(HTML("\\(k\\): number of neighbors used in k-NN prediction")),
@@ -206,30 +207,65 @@ server <- function(input, output, session) {
     })
   })
 
-  output$fit_plot <- renderPlot({
+  output$fit_plot_ui <- renderUI({
+    if (input$dimension == "1d") {
+      plotOutput("fit_plot_static", height = "520px")
+    } else {
+      plotlyOutput("fit_plot_3d", height = "520px")
+    }
+  })
+  
+  output$decomp_plot_ui <- renderUI({
+    if (input$dimension == "1d") {
+      plotOutput("decomp_plot_static", height = "520px")
+    } else {
+      plotlyOutput("decomp_plot_3d", height = "520px")
+    }
+  })
+  
+  output$fit_plot_static <- renderPlot({
     res <- fit_res()
     req(res)
-    if (res$settings$d == 1) {
-      plot_fit_vs_truth_1d(res, truth_col = input$truth_col, est_col = input$est_col)
-    } else {
-      plot_fit_vs_truth_2d(res)
-    }
+    req(res$settings$d == 1)
+    
+    plot_fit_vs_truth_1d(
+      res,
+      truth_col = input$truth_col,
+      est_col = input$est_col
+    )
   })
-
-  output$decomp_plot <- renderPlot({
+  
+  output$fit_plot_3d <- renderPlotly({
+    res <- fit_res()
+    req(res)
+    req(res$settings$d == 2)
+    
+    plot_fit_vs_truth_3d(res)
+  })
+  
+  output$decomp_plot_static <- renderPlot({
     res <- decomp_res()
     req(res)
-    if (res$settings$d == 1) {
-      plot_mse_1d(
-        res,
-        show = c("bias2", "variance", "mse_y"),
-        colors = c("bias2" = input$bias_col, "variance" = input$var_col, "mse_y" = input$mse_col)
+    req(res$settings$d == 1)
+    
+    plot_mse_1d(
+      res,
+      show = c("bias2", "variance", "mse_y"),
+      colors = c(
+        "bias2" = input$bias_col,
+        "variance" = input$var_col,
+        "mse_y" = input$mse_col
       )
-    } else {
-      plot_mse_surface_2d(res, component = "mse_y")
-    }
+    )
   })
-
+  
+  output$decomp_plot_3d <- renderPlotly({
+    res <- decomp_res()
+    req(res)
+    req(res$settings$d == 2)
+    
+    plot_mse_surface_3d(res, component = "mse_y")
+  })
   output$tradeoff_plot <- renderPlot({
     req(curve_res())
     plot_curve_components(
@@ -286,7 +322,7 @@ server <- function(input, output, session) {
         "Minimum theoretical MSE"
       ),
       Value = c(
-        ifelse(p$d == 1, "1D", "2D"),
+        ifelse(p$d == 1, "1D", "2D input with 3D surface display"),
         ifelse(is.na(vals$best_mc), "Not available", as.character(vals$best_mc)),
         ifelse(is.na(vals$best_true), "Not available", as.character(vals$best_true)),
         ifelse(is.na(vals$best_tradeoff), "Not available", as.character(vals$best_tradeoff)),
@@ -303,7 +339,7 @@ server <- function(input, output, session) {
     p <- app_params()
     vals <- best_values()
     paste0(
-      "Dimension: ", ifelse(p$d == 1, "1D", "2D"), "\n",
+      "Dimension: ", ifelse(p$d == 1, "1D", "2D input with 3D surface display"), "\n",
       "Seed: ", p$seed, "\n",
       "n = ", p$n,
       " , k = ", p$k,
