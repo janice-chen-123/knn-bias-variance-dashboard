@@ -12,6 +12,9 @@ In the Website Prototype, the parts where generative AI was used are:
 
 - assisting with debugging errors in the 2D simulation implementation, including cases where 2D plotting functions (such as `plot_fit_vs_truth_2d()` and `plot_mse_surface_2d()`) were triggered under incompatible dimension settings and produced errors requiring `d = 2`,
 - suggesting adjustments to the Shiny UI layout, aligning the console output and summary panels.
+- assisting with debugging errors in 3D visualization, specifically resolving the error `Error: unimplemented type 'expression' in 'duplicated'`,
+- assisting with debugging deployment issues on Posit Connect Cloud, where a runtime error occurred due to missing dependencies (e.g., `plotly` not installed), and providing guidance to regenerate the manifest file to include required packages.
+- assisting with understanding the usage of the `plotly` package for interactive visualization.
 
 Generative AI was used only as a troubleshooting and coding assistant. The overall project design, Monte Carlo simulation framework, statistical methodology, interpretation of results, and final implementation decisions were completed by the group members.
 
