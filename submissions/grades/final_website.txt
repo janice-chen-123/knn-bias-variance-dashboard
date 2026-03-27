@@ -1,0 +1,20 @@
+In the previous checkpoint I made the comment:
+
+2. remove underscores from plot names (I am good with underscores when it comes to things like vignettes, but if you're writing plot names then it's better to have "Average Bias" instead of "avg_bias2".
+
+Unfortunately, some of the plot names still have them, or, there's a weird name that I'm not 100% certain what it represents.
+
+For example, in the Bias-Variance Breakdown the labels are "mathrmBias..." "mathrmVar...". I think there's probably a better name or you could have gotten rid of "mathrm".
+
+In MSE Comparison, we see some of the names are proper (i.e., line circle has "Monte Carlo MSE", but then later you see the pure circle is just "monte_carlo_mse" and "theoretical_mse" (and I don't see these reflected on the graph).
+
+Overall, this is still like a big improvement and I LOVEE the 3d plot version! It is very nice.
+
+Grade:
+(-2%) for not fixing the underscore issue everywhere
+
+Group grade: 
+> 78/80 * 6.4
+[1] 6.24
+
+Individual grades are private and will be released later when posted on Quercus. Bonus marks, if applicable, are reflected on Quercus instead of feedback here.
